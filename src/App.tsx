@@ -76,15 +76,15 @@ export default function App() {
   return (
     <>
       <div className="app">
+        <AppBar
+          name={planner.layout.name} saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
+          onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onDownload={download}
+        />
         <div className="sponsor-banner" role="note" aria-label={BANNER_MESSAGE}>
           <div className="sponsor-track" aria-hidden="true">
             {Array.from({ length: 4 }, (_, index) => <span key={index}>{BANNER_MESSAGE}</span>)}
           </div>
         </div>
-        <AppBar
-          name={planner.layout.name} saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
-          onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onDownload={download}
-        />
         <main className="workbench">
           <aside className="sidebar" aria-label="Boards and accessories">
             <BoardsPanel planner={planner} />
