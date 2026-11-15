@@ -99,9 +99,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
   ].filter(Boolean).join(', ')
   return (
     <section className="stage" aria-label="Board arrangement">
-      <div className="stage-bar">
-        <button type="button" className="text-button" onClick={planner.clearItems}>Clear accessories</button>
-      </div>
       <div
         ref={viewportRef} className={`board-scroll ${panning ? 'panning' : spaceHeld ? 'pan-ready' : ''}`}
         onPointerDownCapture={onPointerDownCapture} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
@@ -146,6 +143,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
           </span>
         </div>
       )}
+      <div className="stage-corner">
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
         <span><b>Drag</b> the canvas to select an area</span>
@@ -153,6 +151,8 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
         <span><kbd>←</kbd><kbd>→</kbd> move by a hole</span>
         <span><kbd>Del</kbd> remove</span>
         <span><kbd>{MOD}C</kbd><kbd>{MOD}V</kbd> copy, paste</span>
+      </div>
+      <button type="button" className="button clear-button" onClick={planner.clearItems}>Clear accessories</button>
       </div>
     </section>
   )
