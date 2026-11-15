@@ -94,7 +94,9 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onCancel)
+    document.body.classList.add('dragging')
     return () => {
+      document.body.classList.remove('dragging')
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onCancel)

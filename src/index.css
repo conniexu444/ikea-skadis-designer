@@ -98,10 +98,8 @@ svg { flex: none; }
 /* Stage */
 .stage { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--canvas); }
 .stage-bar { position: absolute; z-index: 15; top: 14px; right: 20px; display: flex; align-items: center; gap: 12px; }
-.board-scroll { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; }
+.board-scroll { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; }
 .board-scroll.panning { cursor: grabbing; }
-.board-scroll .board-wrap { cursor: default; }
-.board-scroll .board { cursor: grab; }
 .board-wrap.board-moving .board { cursor: grabbing; }
 .board-area { position: absolute; width: 0; height: 0; }
 .stage-hints { position: absolute; z-index: 10; right: 20px; bottom: 16px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; color: #7b776f; font-size: 12px; pointer-events: none; }
@@ -118,9 +116,8 @@ svg { flex: none; }
 .board-wood { background: #cfae84; border-color: #b9926a; }
 .board-wrap.selected-board .board { outline: 2px solid var(--accent); outline-offset: -2px; }
 .board-wrap.board-snap .board { outline: 2px solid var(--peg); outline-offset: -2px; }
-.board-grip { position: absolute; z-index: 6; top: -32px; left: 0; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 600; white-space: nowrap; cursor: grab; touch-action: none; box-shadow: var(--shadow-sm); }
+.board-grip { position: absolute; z-index: 6; top: -32px; left: 0; display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 600; white-space: nowrap; touch-action: none; box-shadow: var(--shadow-sm); }
 .board-grip:hover { border-color: var(--line-strong); color: var(--ink); }
-.board-grip:active { cursor: grabbing; }
 .selected-board .board-grip { border-color: var(--accent); color: var(--accent-ink); }
 .board-wrap:not(.selected-board) .board-grip { display: none; }
 .grip-dots { font-size: 14px; line-height: 1; color: var(--muted); letter-spacing: -2px; }
@@ -132,8 +129,8 @@ svg { flex: none; }
 .board-black .board-holes { fill: #15191b; }
 .board-wood .board-holes { fill: #7a5d3f; }
 .board-items { position: absolute; inset: 0; z-index: 2; }
-.board-item { position: absolute; display: grid; place-items: center; cursor: grab; touch-action: none; filter: drop-shadow(1px 4px 3px #1d232b40); }
-.board-item:active { cursor: grabbing; }
+.board-item { position: absolute; display: grid; place-items: center; touch-action: none; filter: drop-shadow(1px 4px 3px #1d232b40); }
+.dragging, .dragging * { cursor: grabbing !important; }
 .board-item svg { width: 100%; height: 100%; overflow: visible; }
 .board-item.selected { filter: drop-shadow(1.5px 0 0 var(--accent)) drop-shadow(-1.5px 0 0 var(--accent)) drop-shadow(0 1.5px 0 var(--accent)) drop-shadow(0 -1.5px 0 var(--accent)) drop-shadow(1px 4px 3px #1d232b40); }
 .board-item.dragging { opacity: .35; }
