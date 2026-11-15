@@ -82,7 +82,7 @@ function sanitizeState(input) {
     const board = boards[Math.max(0, Math.min(boardIndex, boards.length - 1))];
     let col = Number(item.col), row = Number(item.row);
     if (!Number.isInteger(col) || !Number.isInteger(row)) [col, row] = anchorFor(board.size, a.id, rotation, Number(item.x) || 0, Number(item.y) || 0);
-    if (placementIssue(board, a.id, rotation, col, row, usedHoles(items, board.id))) {
+    if (placementIssue(board, a.id, rotation, col, row, usedHoles(items, board))) {
       const spot = findSpot(board, items, a.id, rotation, [col, row]);
       if (!spot) return;
       [col, row] = spot;
@@ -109,19 +109,27 @@ function nextId() { return `piece-${Date.now()}-${Math.random().toString(36).sli
 function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
 
 // SKÅDIS holes sit on a staggered grid: 2 cm apart diagonally, so holes in the same row or column are 4 cm apart.
+// The 36×56 board's rows alternate 8 and 9 holes, starting and ending with 8 (parity 1 shifts the first row in).
+const HOLE_LAYOUTS = { '36x56': { parity: 1 } };
 function holeGrid(size) {
-  const [bw, bh] = BOARD_SIZES[size];
-  return { cols: Math.round((bw - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1, rows: Math.round((bh - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1 };
+  const [bw, bh] = BOARD_SIZES[size], layout = HOLE_LAYOUTS[size] || {};
+  return {
+    cols: layout.cols ?? Math.round((bw - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1,
+    rows: layout.rows ?? Math.round((bh - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1,
+    x0: layout.x0 ?? HOLE_MARGIN,
+    y0: layout.y0 ?? HOLE_MARGIN,
+    parity: layout.parity ?? 0
+  };
 }
 function holeExists(size, col, row) {
-  const { cols, rows } = holeGrid(size);
-  return Number.isInteger(col) && Number.isInteger(row) && col >= 0 && row >= 0 && col < cols && row < rows && (col + row) % 2 === 0;
+  const { cols, rows, parity } = holeGrid(size);
+  return Number.isInteger(col) && Number.isInteger(row) && col >= 0 && row >= 0 && col < cols && row < rows && (col + row) % 2 === parity;
 }
-function holePoint(col, row) { return [HOLE_MARGIN + col * HOLE_PITCH, HOLE_MARGIN + row * HOLE_PITCH]; }
+function holePoint(size, col, row) { const { x0, y0 } = holeGrid(size); return [x0 + col * HOLE_PITCH, y0 + row * HOLE_PITCH]; }
 function holeKey(col, row) { return `${col},${row}`; }
 function allHoles(size) {
-  const { cols, rows } = holeGrid(size), holes = [];
-  for (let row = 0; row < rows; row++) for (let col = row % 2; col < cols; col += 2) holes.push([col, row]);
+  const { cols, rows, parity } = holeGrid(size), holes = [];
+  for (let row = 0; row < rows; row++) for (let col = (row + parity) % 2; col < cols; col += 2) holes.push([col, row]);
   return holes;
 }
 function geometry(type, rotation = 0) {
@@ -130,24 +138,24 @@ function geometry(type, rotation = 0) {
   const pegs = a.pegs.map(([x, y]) => rotation === 90 ? [-y, x] : [x, y]);
   return { pegs, rect: rotation === 90 ? [-(oy + a.h), ox, a.h, a.w] : [ox, oy, a.w, a.h] };
 }
-function placement(type, rotation, col, row) {
-  const { pegs, rect } = geometry(type, rotation), [ax, ay] = holePoint(col, row);
+function placement(size, type, rotation, col, row) {
+  const { pegs, rect } = geometry(type, rotation), [ax, ay] = holePoint(size, col, row);
   return { holes: pegs.map(([x, y]) => [col + x / HOLE_PITCH, row + y / HOLE_PITCH]), rect: [ax + rect[0], ay + rect[1], rect[2], rect[3]] };
 }
-function itemPlacement(item) { return placement(item.type, item.rotation, item.col, item.row); }
-function usedHoles(items, boardId, ignoreId = null) {
+function itemPlacement(item, size) { return placement(size, item.type, item.rotation, item.col, item.row); }
+function usedHoles(items, board, ignoreId = null) {
   const used = new Set();
-  items.forEach(item => { if (item.boardId === boardId && item.id !== ignoreId) itemPlacement(item).holes.forEach(([col, row]) => used.add(holeKey(col, row))); });
+  items.forEach(item => { if (item.boardId === board.id && item.id !== ignoreId) itemPlacement(item, board.size).holes.forEach(([col, row]) => used.add(holeKey(col, row))); });
   return used;
 }
 function placementIssue(board, type, rotation, col, row, used) {
-  const { holes, rect } = placement(type, rotation, col, row), [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6;
+  const { holes, rect } = placement(board.size, type, rotation, col, row), [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6;
   const fits = holes.every(([c, r]) => holeExists(board.size, c, r)) && rect[0] >= -eps && rect[1] >= -eps && rect[0] + rect[2] <= bw + eps && rect[1] + rect[3] <= bh + eps;
   if (!fits) return 'edge';
   return holes.some(([c, r]) => used.has(holeKey(c, r))) ? 'taken' : null;
 }
 function nearestHole(size, x, y) {
-  const { cols, rows } = holeGrid(size), fc = (x - HOLE_MARGIN) / HOLE_PITCH, fr = (y - HOLE_MARGIN) / HOLE_PITCH;
+  const { cols, rows, x0, y0 } = holeGrid(size), fc = (x - x0) / HOLE_PITCH, fr = (y - y0) / HOLE_PITCH;
   let best = null, bestDistance = Infinity;
   for (let col = Math.floor(fc) - 1; col <= Math.ceil(fc) + 1; col++) for (let row = Math.floor(fr) - 1; row <= Math.ceil(fr) + 1; row++) {
     const c = clamp(col, 0, cols - 1), r = clamp(row, 0, rows - 1);
@@ -159,11 +167,11 @@ function nearestHole(size, x, y) {
 }
 function anchorFor(size, type, rotation, x, y) { const { rect } = geometry(type, rotation); return nearestHole(size, x - rect[0], y - rect[1]); }
 function findSpot(board, items, type, rotation, near = null, ignoreId = null) {
-  const used = usedHoles(items, board.id, ignoreId), holes = allHoles(board.size);
+  const used = usedHoles(items, board, ignoreId), holes = allHoles(board.size);
   if (near) holes.sort((a, b) => Math.hypot(a[0] - near[0], (a[1] - near[1]) * 1.01) - Math.hypot(b[0] - near[0], (b[1] - near[1]) * 1.01));
   return holes.find(([col, row]) => !placementIssue(board, type, rotation, col, row, used)) || null;
 }
-function holeStats(board) { return { used: usedHoles(state.items, board.id).size, total: allHoles(board.size).length }; }
+function holeStats(board) { return { used: usedHoles(state.items, board).size, total: allHoles(board.size).length }; }
 
 function art(type, attributes = '') {
   const white = '#f8f9f6', edge = '#aab4b0', shade = '#e3e9e5', dark = '#6d8281';
@@ -188,19 +196,19 @@ function renderCatalog() {
   $('#catalogCount').textContent = plural(visible.length, 'piece');
   catalogList.innerHTML = visible.length ? visible.map(a => `<div class="catalog-card" data-type="${a.id}" role="group" aria-label="${a.name}"><div class="catalog-thumb">${art(a.id)}</div><div class="catalog-info"><strong>${a.name}</strong><small>${a.detail}</small><small class="hole-count">Uses ${plural(a.pegs.length, 'hole')}</small></div><button class="add-button" data-add="${a.id}" type="button" aria-label="Add ${a.name}">+</button></div>`).join('') : '<p class="catalog-empty">No accessories match that search.</p>';
 }
-function slot(col, row, attributes = '') { const [x, y] = holePoint(col, row); return `<rect x="${x - 0.25}" y="${y - 0.75}" width="0.5" height="1.5" rx="0.25" ${attributes}/>`; }
+function slot(size, col, row, attributes = '') { const [x, y] = holePoint(size, col, row); return `<rect x="${x - 0.25}" y="${y - 0.75}" width="0.5" height="1.5" rx="0.25" ${attributes}/>`; }
 function renderBoards() {
   const holesUsed = state.boards.reduce((sum, board) => sum + holeStats(board).used, 0), holesTotal = state.boards.reduce((sum, board) => sum + holeStats(board).total, 0);
   $('#sizeLabel').textContent = `${plural(state.boards.length, 'board')} · ${holesUsed} of ${holesTotal} holes used`;
   boardLayer.innerHTML = state.boards.map((board, index) => {
     const [bw, bh] = BOARD_SIZES[board.size], items = state.items.filter(item => item.boardId === board.id);
     const pieces = items.map(item => {
-      const a = accessory(item.type), [x, y, w, h] = itemPlacement(item).rect, rotated = item.rotation === 90;
+      const a = accessory(item.type), [x, y, w, h] = itemPlacement(item, board.size).rect, rotated = item.rotation === 90;
       const svg = art(item.type, rotated ? `style="position:absolute;left:50%;top:50%;width:${a.w / w * 100}%;height:${a.h / h * 100}%;transform:translate(-50%,-50%) rotate(90deg)"` : '');
       return `<div class="board-item ${item.id === selectedId ? 'selected' : ''} ${dragging?.id === item.id ? 'dragging' : ''}" data-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${a.name}, uses ${plural(a.pegs.length, 'hole')}, select and drag to move" style="left:${x / bw * 100}%;top:${y / bh * 100}%;width:${w / bw * 100}%;height:${h / bh * 100}%">${svg}</div>`;
     }).join('');
-    const holes = allHoles(board.size).map(([col, row]) => slot(col, row)).join('');
-    const pegs = items.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item).holes.map(([col, row]) => slot(col, row, `class="peg ${item.id === selectedId ? 'active' : ''}" vector-effect="non-scaling-stroke"`)).join('')).join('');
+    const holes = allHoles(board.size).map(([col, row]) => slot(board.size, col, row)).join('');
+    const pegs = items.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item, board.size).holes.map(([col, row]) => slot(board.size, col, row, `class="peg ${item.id === selectedId ? 'active' : ''}" vector-effect="non-scaling-stroke"`)).join('')).join('');
     const svgLayer = (className, content) => `<svg class="${className}" viewBox="0 0 ${bw} ${bh}" preserveAspectRatio="none" aria-hidden="true">${content}</svg>`;
     return `<div class="board-wrap ${board.id === selectedBoardId ? 'selected-board' : ''} ${dragging?.kind === 'board' && dragging.id === board.id ? 'board-moving' : ''}" data-board-id="${board.id}" style="left:${board.x / WORLD_W * 100}%;top:${board.y / WORLD_H * 100}%;width:${bw / WORLD_W * 100}%;height:${bh / WORLD_H * 100}%"><button class="board-grip" type="button" data-grip="${board.id}" aria-label="Drag board ${index + 1} to move it"><span class="grip-dots" aria-hidden="true">⠿</span> Board ${index + 1}</button><div class="board board-${board.color}" role="group" aria-label="Board ${index + 1}, ${bw} by ${bh} centimeters, ${board.color}"><span class="board-index">BOARD ${String(index + 1).padStart(2, '0')}</span>${svgLayer('board-holes', holes)}<div class="board-items">${pieces}</div>${svgLayer('board-pegs', `${pegs}<g class="peg-preview"></g>`)}</div></div>`;
   }).join('');
@@ -261,11 +269,17 @@ function addAccessory(type, spot = null, boardId = selectedBoardId) {
   toast(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`);
 }
 function boardLabel(id) { return `board ${state.boards.findIndex(board => board.id === id) + 1}`; }
-function refitItems(board) {
-  const kept = state.items.filter(item => item.boardId !== board.id);
+// Pieces keep their distance from the nearest board edge, so corner mounts stay in the corners.
+function refitItems(board, fromSize = board.size) {
+  const kept = state.items.filter(item => item.boardId !== board.id), [ow, oh] = BOARD_SIZES[fromSize], [nw, nh] = BOARD_SIZES[board.size];
   let removed = 0;
   state.items.filter(item => item.boardId === board.id).forEach(item => {
-    const spot = placementIssue(board, item.type, item.rotation, item.col, item.row, usedHoles(kept, board.id)) ? findSpot(board, kept, item.type, item.rotation, [item.col, item.row]) : [item.col, item.row];
+    let { col, row } = item;
+    if (fromSize !== board.size) {
+      const [x, y] = holePoint(fromSize, col, row);
+      [col, row] = nearestHole(board.size, x > ow / 2 ? x + nw - ow + 0.02 : x - 0.02, y > oh / 2 ? y + nh - oh + 0.01 : y - 0.01);
+    }
+    const spot = placementIssue(board, item.type, item.rotation, col, row, usedHoles(kept, board)) ? findSpot(board, kept, item.type, item.rotation, [col, row]) : [col, row];
     if (spot) kept.push({ ...item, col: spot[0], row: spot[1] }); else removed++;
   });
   state.items = kept;
@@ -275,10 +289,11 @@ function changeSize(size) {
   const board = currentBoard(); if (size === board.size) return;
   let removed = 0;
   commit(() => {
+    const fromSize = board.size;
     board.size = size;
     const [bw] = BOARD_SIZES[size];
     board.x = clamp(board.x, 0, WORLD_W - bw);
-    removed = refitItems(board);
+    removed = refitItems(board, fromSize);
     const other = state.boards.find(entry => entry.id !== board.id);
     if (other && boardRectOverlaps(board, other)) {
       const left = board.x <= other.x ? board : other, right = left === board ? other : board;
@@ -315,7 +330,7 @@ function selectedAction(action) {
   }
   if (action === 'rotate') {
     const rotation = item.rotation === 90 ? 0 : 90;
-    const spot = placementIssue(board, item.type, rotation, item.col, item.row, usedHoles(state.items, board.id, item.id)) ? findSpot(board, state.items, item.type, rotation, [item.col, item.row], item.id) : [item.col, item.row];
+    const spot = placementIssue(board, item.type, rotation, item.col, item.row, usedHoles(state.items, board, item.id)) ? findSpot(board, state.items, item.type, rotation, [item.col, item.row], item.id) : [item.col, item.row];
     if (!spot) { toast('There are no free holes to rotate this piece into'); return; }
     commit(() => { item.rotation = rotation; item.col = spot[0]; item.row = spot[1]; });
   }
@@ -359,7 +374,7 @@ function dropTarget(event, drag) {
     const [bw, bh] = BOARD_SIZES[board.size];
     const x = (event.clientX - rect.left) / rect.width * bw - drag.w / 2, y = (event.clientY - rect.top) / rect.height * bh - drag.h / 2;
     const [col, row] = anchorFor(board.size, drag.type, drag.rotation, x, y);
-    return { board, col, row, issue: placementIssue(board, drag.type, drag.rotation, col, row, usedHoles(state.items, board.id, drag.id)) };
+    return { board, col, row, issue: placementIssue(board, drag.type, drag.rotation, col, row, usedHoles(state.items, board, drag.id)) };
   }
   return null;
 }
@@ -367,9 +382,9 @@ function showDropPreview(target, drag) {
   boardLayer.querySelectorAll('.peg-preview').forEach(group => { group.innerHTML = ''; });
   if (!target) return;
   const group = boardLayer.querySelector(`[data-board-id="${target.board.id}"] .peg-preview`); if (!group) return;
-  const { holes, rect: [x, y, w, h] } = placement(drag.type, drag.rotation, target.col, target.row);
+  const { holes, rect: [x, y, w, h] } = placement(target.board.size, drag.type, drag.rotation, target.col, target.row);
   group.setAttribute('class', `peg-preview ${target.issue ? 'blocked' : 'open'}`);
-  group.innerHTML = `<rect class="preview-body" x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" vector-effect="non-scaling-stroke"/>${holes.map(([col, row]) => slot(col, row, 'class="preview-peg" vector-effect="non-scaling-stroke"')).join('')}`;
+  group.innerHTML = `<rect class="preview-body" x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" vector-effect="non-scaling-stroke"/>${holes.map(([col, row]) => slot(target.board.size, col, row, 'class="preview-peg" vector-effect="non-scaling-stroke"')).join('')}`;
 }
 function moveDrag(event) {
   if (!dragging) return;
@@ -408,16 +423,16 @@ function endDrag(event) {
 function downloadLayout() {
   const scale = 10, pad = 45, W = WORLD_W * scale + pad * 2, H = WORLD_H * scale + pad * 2;
   const palette = { white: ['#fafaf8', '#e7e8e4', '#b6c0ba'], black: ['#33383b', '#252d30', '#131b1e'], wood: ['#c9a87f', '#b38c64', '#785c40'] };
-  const scaledSlot = (col, row, fill) => { const [x, y] = holePoint(col, row); return `<rect x="${(x - 0.25) * scale}" y="${(y - 0.75) * scale}" width="${0.5 * scale}" height="${1.5 * scale}" rx="${0.25 * scale}" fill="${fill}"/>`; };
+  const scaledSlot = (size, col, row, fill) => { const [x, y] = holePoint(size, col, row); return `<rect x="${(x - 0.25) * scale}" y="${(y - 0.75) * scale}" width="${0.5 * scale}" height="${1.5 * scale}" rx="${0.25 * scale}" fill="${fill}"/>`; };
   const boards = state.boards.map(board => {
     const [bw, bh] = BOARD_SIZES[board.size], x = pad + board.x * scale, y = pad + board.y * scale, color = palette[board.color];
     const boardItems = state.items.filter(item => item.boardId === board.id);
-    const holes = allHoles(board.size).map(([col, row]) => scaledSlot(col, row, color[2])).join('');
+    const holes = allHoles(board.size).map(([col, row]) => scaledSlot(board.size, col, row, color[2])).join('');
     const items = boardItems.map(item => {
-      const a = accessory(item.type), [rx, ry, rw] = itemPlacement(item).rect, ix = rx * scale, iy = ry * scale, iw = a.w * scale, ih = a.h * scale;
+      const a = accessory(item.type), [rx, ry, rw] = itemPlacement(item, board.size).rect, ix = rx * scale, iy = ry * scale, iw = a.w * scale, ih = a.h * scale;
       return item.rotation === 90 ? `<g transform="translate(${ix + rw * scale} ${iy}) rotate(90)">${art(item.type, `x="0" y="0" width="${iw}" height="${ih}"`)}</g>` : art(item.type, `x="${ix}" y="${iy}" width="${iw}" height="${ih}"`);
     }).join('');
-    const pegs = boardItems.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item).holes.map(([col, row]) => scaledSlot(col, row, '#e2b33c')).join('')).join('');
+    const pegs = boardItems.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item, board.size).holes.map(([col, row]) => scaledSlot(board.size, col, row, '#e2b33c')).join('')).join('');
     return `<g transform="translate(${x} ${y})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/>${holes}${items}${pegs}</g>`;
   }).join('');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#e9eeea"/>${boards}</svg>`;
@@ -488,7 +503,7 @@ document.addEventListener('keydown', event => {
 });
 function nudgeSelected([dx, dy], holes) {
   const item = state.items.find(item => item.id === selectedId); if (!item) return;
-  const board = state.boards.find(board => board.id === item.boardId), used = usedHoles(state.items, board.id, item.id);
+  const board = state.boards.find(board => board.id === item.boardId), used = usedHoles(state.items, board, item.id);
   for (let n = holes; n < 60; n++) {
     const col = item.col + dx * 2 * n, row = item.row + dy * 2 * n, issue = placementIssue(board, item.type, item.rotation, col, row, used);
     if (issue === 'edge') break;
