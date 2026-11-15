@@ -202,11 +202,11 @@ function renderBoards() {
     const holes = allHoles(board.size).map(([col, row]) => slot(col, row)).join('');
     const pegs = items.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item).holes.map(([col, row]) => slot(col, row, `class="peg ${item.id === selectedId ? 'active' : ''}" vector-effect="non-scaling-stroke"`)).join('')).join('');
     const svgLayer = (className, content) => `<svg class="${className}" viewBox="0 0 ${bw} ${bh}" preserveAspectRatio="none" aria-hidden="true">${content}</svg>`;
-    return `<div class="board-wrap ${board.id === selectedBoardId ? 'selected-board' : ''} ${dragging?.kind === 'board' && dragging.id === board.id ? 'board-moving' : ''}" data-board-id="${board.id}" style="left:${board.x / WORLD_W * 100}%;top:${board.y / WORLD_H * 100}%;width:${bw / WORLD_W * 100}%;height:${bh / WORLD_H * 100}%"><button class="board-grip" type="button" data-grip="${board.id}" aria-label="Drag board ${index + 1} to move it"><span class="grip-dots" aria-hidden="true">⠿</span> Move board ${index + 1}</button><div class="board board-${board.color}" role="group" aria-label="Board ${index + 1}, ${bw} by ${bh} centimeters, ${board.color}"><span class="board-index">BOARD ${String(index + 1).padStart(2, '0')}</span>${svgLayer('board-holes', holes)}<div class="board-items">${pieces}</div>${svgLayer('board-pegs', `${pegs}<g class="peg-preview"></g>`)}</div></div>`;
+    return `<div class="board-wrap ${board.id === selectedBoardId ? 'selected-board' : ''} ${dragging?.kind === 'board' && dragging.id === board.id ? 'board-moving' : ''}" data-board-id="${board.id}" style="left:${board.x / WORLD_W * 100}%;top:${board.y / WORLD_H * 100}%;width:${bw / WORLD_W * 100}%;height:${bh / WORLD_H * 100}%"><button class="board-grip" type="button" data-grip="${board.id}" aria-label="Drag board ${index + 1} to move it"><span class="grip-dots" aria-hidden="true">⠿</span> Board ${index + 1}</button><div class="board board-${board.color}" role="group" aria-label="Board ${index + 1}, ${bw} by ${bh} centimeters, ${board.color}"><span class="board-index">BOARD ${String(index + 1).padStart(2, '0')}</span>${svgLayer('board-holes', holes)}<div class="board-items">${pieces}</div>${svgLayer('board-pegs', `${pegs}<g class="peg-preview"></g>`)}</div></div>`;
   }).join('');
 }
 function renderBoardSelector() {
-  $('#boardSelector').innerHTML = state.boards.map((board, i) => { const { used, total } = holeStats(board); return `<button class="board-select ${board.id === selectedBoardId ? 'active' : ''}" data-select-board="${board.id}" type="button" aria-pressed="${board.id === selectedBoardId}"><strong>Board ${i + 1}</strong><small>${board.size.replace('x', ' × ')} cm · ${board.color}</small><small>${used} / ${total} holes used</small></button>`; }).join('');
+  $('#boardSelector').innerHTML = state.boards.map((board, i) => { const { used, total } = holeStats(board); return `<button class="board-select ${board.id === selectedBoardId ? 'active' : ''}" data-select-board="${board.id}" type="button" aria-pressed="${board.id === selectedBoardId}"><strong>Board ${i + 1}</strong><small>${board.size.replace('x', ' × ')} cm · ${board.color}</small><span class="meter" aria-hidden="true"><i style="width:${used / total * 100}%"></i></span><small>${used} / ${total} holes used</small></button>`; }).join('');
   $('#addBoardButton').disabled = state.boards.length >= 2;
   $('#removeBoardButton').disabled = state.boards.length <= 1;
 }
@@ -221,14 +221,24 @@ function renderParts() {
 function renderSelection() {
   const panel = $('#selectionPanel');
   const item = state.items.find(item => item.id === selectedId);
-  if (!item) { panel.hidden = true; selectedId = null; return; }
+  if (!item) { selectedId = null; panel.innerHTML = '<div class="selection-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 7-6 2-2 6z"/></svg><span>Select a piece on a board to rotate, copy, or remove it.</span></div>'; return; }
   const a = accessory(item.type);
-  panel.hidden = false;
   panel.innerHTML = `<div class="selection-heading"><span class="mini-art">${art(a.id)}</span><span><strong>${a.name}</strong><small>Uses ${plural(a.pegs.length, 'hole')}</small></span></div><div class="selection-actions"><button data-action="rotate" type="button">↻ Rotate</button><button data-action="duplicate" type="button">⧉ Copy</button><button data-action="remove" type="button">× Remove</button></div>`;
 }
+function fitView() {
+  if (dragging?.kind === 'board') return;
+  const view = boardArea.parentElement, padX = 32, padTop = 52, padBottom = 24;
+  const left = Math.min(...state.boards.map(board => board.x)), right = Math.max(...state.boards.map(board => board.x + BOARD_SIZES[board.size][0]));
+  const top = Math.min(...state.boards.map(board => board.y)), bottom = Math.max(...state.boards.map(board => board.y + BOARD_SIZES[board.size][1]));
+  const scale = clamp(Math.min((view.clientWidth - padX * 2) / (right - left), (view.clientHeight - padTop - padBottom) / (bottom - top)), 2, 16);
+  boardArea.style.width = `${WORLD_W * scale}px`;
+  boardArea.style.left = `${(view.clientWidth - (right - left) * scale) / 2 - left * scale}px`;
+  boardArea.style.top = `${padTop + (view.clientHeight - padTop - padBottom - (bottom - top) * scale) / 2 - top * scale}px`;
+}
+
 function render() {
   if (!state.boards.some(board => board.id === selectedBoardId)) selectedBoardId = state.boards[0].id;
-  renderBoards(); renderBoardSelector(); renderParts(); renderSelection();
+  renderBoards(); renderBoardSelector(); renderParts(); renderSelection(); fitView();
   $('#projectName').value = state.name;
   document.querySelectorAll('[data-size]').forEach(button => { button.classList.toggle('active', button.dataset.size === currentBoard().size); button.setAttribute('aria-pressed', String(button.dataset.size === currentBoard().size)); });
   document.querySelectorAll('[data-color]').forEach(button => { button.classList.toggle('active', button.dataset.color === currentBoard().color); button.setAttribute('aria-pressed', String(button.dataset.color === currentBoard().color)); });
@@ -487,4 +497,7 @@ function nudgeSelected([dx, dy], holes) {
   toast('No free holes in that direction');
 }
 window.addEventListener('hashchange', () => { if (location.hash.startsWith('#layout=')) { const shared = decodeState(location.hash.slice(8)); if (shared) { state = shared; selectedId = null; selectedBoardId = state.boards[0].id; undoStack = []; redoStack = []; save(); render(); toast('Shared layout opened'); } } });
-renderCatalog(); render(); save();
+renderCatalog(); render();
+new ResizeObserver(fitView).observe(boardArea.parentElement);
+if (!localStorage.getItem(STORAGE_KEY) && !location.hash.startsWith('#layout=')) dialog.showModal();
+save();
