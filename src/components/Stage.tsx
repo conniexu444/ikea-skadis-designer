@@ -138,7 +138,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
       {selected && (
         <div className="selection-bar" role="toolbar" aria-label="Selected piece">
           <span className="mini-art"><Art type={selected.id} /></span>
-          <span className="selection-name"><strong>{selected.name}</strong><small>Uses {plural(selected.pegs.length, 'hole')}</small></span>
+          <span className="selection-name"><strong>{selected.name}</strong></span>
           <span className="selection-actions">
             <button type="button" onClick={planner.rotateSelected}>↻ Rotate</button>
             <button type="button" onClick={planner.duplicateSelected}>⧉ Copy</button>

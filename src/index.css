@@ -93,8 +93,6 @@ svg { flex: none; }
 .catalog-info { min-width: 0; padding: 0 2px; }
 .catalog-info strong { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .catalog-info small { display: none; }
-.catalog-info .hole-count { display: flex; align-items: center; gap: 5px; margin-top: 2px; color: var(--muted); font-size: 12px; }
-.catalog-info .hole-count:before { content: ""; width: 4px; height: 10px; border-radius: 2px; background: var(--peg); box-shadow: 0 0 0 1px #c99a2e; }
 .add-button { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink); font-size: 18px; line-height: 1; box-shadow: var(--shadow-sm); opacity: 0; transition: opacity .15s, background .15s; }
 .catalog-card:hover .add-button, .add-button:focus-visible { opacity: 1; }
 .add-button:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
@@ -164,7 +162,6 @@ svg { flex: none; }
 .selection-bar .mini-art { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 8px; background: var(--wall); flex: none; }
 .selection-bar .mini-art svg { width: 28px; height: 28px; }
 .selection-name strong { display: block; font-size: 13px; font-weight: 650; }
-.selection-name small { display: block; color: var(--muted); font-size: 12px; }
 .selection-actions { display: flex; gap: 6px; padding-left: 12px; border-left: 1px solid var(--line); }
 .selection-actions button { height: 34px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .selection-actions button:hover { border-color: #c5bdae; color: var(--ink); }

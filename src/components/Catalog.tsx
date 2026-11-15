@@ -34,7 +34,6 @@ export function Catalog({ onAdd, onStartDrag }: Props) {
             <div className="catalog-info">
               <strong>{a.name}</strong>
               <small>{a.detail}</small>
-              <small className="hole-count">Uses {plural(a.pegs.length, 'hole')}</small>
             </div>
             <button className="add-button" type="button" aria-label={`Add ${a.name}`} onClick={() => onAdd(a.id)}>+</button>
           </div>
