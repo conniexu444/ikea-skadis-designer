@@ -22,10 +22,6 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
             <span className="chevron" aria-hidden="true" />Boards
           </button>
         </h2>
-        <div className="board-actions">
-          <button type="button" className="text-button" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add</button>
-          <button type="button" className="text-button muted" disabled={layout.boards.length <= 1} onClick={planner.removeBoard}>Remove</button>
-        </div>
       </div>
       <div id="boards-panel-body" className="panel-collapse" inert={!open}>
       <div className="panel-body">
@@ -39,6 +35,10 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
             </button>
           )
         })}
+      </div>
+      <div className="board-actions">
+        <button type="button" className="text-button" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add</button>
+        <button type="button" className="text-button muted" disabled={layout.boards.length <= 1} onClick={planner.removeBoard}>Remove</button>
       </div>
       <div className="field">
         <span className="field-label">Size <small>cm</small></span>
