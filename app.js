@@ -218,35 +218,46 @@ function renderBoardSelector() {
   $('#addBoardButton').disabled = state.boards.length >= 2;
   $('#removeBoardButton').disabled = state.boards.length <= 1;
 }
-function renderParts() {
-  const counts = new Map();
-  state.items.forEach(item => counts.set(item.type, (counts.get(item.type) || 0) + 1));
-  $('#partTotal').textContent = `${state.boards.length + state.items.length} pieces`;
-  const boards = state.boards.map((board, i) => `<div class="part-row"><span>Board ${i + 1} · ${board.size.replace('x', ' × ')} cm</span><span>× 1</span></div>`).join('');
-  const pieces = [...counts].map(([type, n]) => `<div class="part-row"><span>${accessory(type).name}</span><span>× ${n}</span></div>`).join('');
-  $('#partsList').innerHTML = boards + pieces;
-}
 function renderSelection() {
   const panel = $('#selectionPanel');
   const item = state.items.find(item => item.id === selectedId);
-  if (!item) { selectedId = null; panel.innerHTML = '<div class="selection-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 7-6 2-2 6z"/></svg><span>Select a piece on a board to rotate, copy, or remove it.</span></div>'; return; }
+  panel.hidden = !item;
+  if (!item) { selectedId = null; return; }
   const a = accessory(item.type);
-  panel.innerHTML = `<div class="selection-heading"><span class="mini-art">${art(a.id)}</span><span><strong>${a.name}</strong><small>Uses ${plural(a.pegs.length, 'hole')}</small></span></div><div class="selection-actions"><button data-action="rotate" type="button">↻ Rotate</button><button data-action="duplicate" type="button">⧉ Copy</button><button data-action="remove" type="button">× Remove</button></div>`;
+  panel.innerHTML = `<span class="mini-art">${art(a.id)}</span><span class="selection-name"><strong>${a.name}</strong><small>Uses ${plural(a.pegs.length, 'hole')}</small></span><span class="selection-actions"><button data-action="rotate" type="button">↻ Rotate</button><button data-action="duplicate" type="button">⧉ Copy</button><button data-action="remove" type="button">× Remove</button></span>`;
+}
+// The view is a camera over the world: `scale` is px per cm, `x`/`y` place the world origin in the viewport.
+const viewport = $('#boardViewport'), camera = { scale: 8, x: 0, y: 0 }, MIN_SCALE = 2, MAX_SCALE = 48;
+let autoFit = true, fitScale = 8, panning = null;
+function applyCamera() {
+  boardArea.style.width = `${WORLD_W * camera.scale}px`;
+  boardArea.style.left = `${camera.x}px`;
+  boardArea.style.top = `${camera.y}px`;
+  $('#zoomFit').textContent = `${Math.round(camera.scale / fitScale * 100)}%`;
 }
 function fitView() {
   if (dragging?.kind === 'board') return;
-  const view = boardArea.parentElement, padX = 32, padTop = 52, padBottom = 24;
+  const padX = 32, padTop = 52, padBottom = 72;
   const left = Math.min(...state.boards.map(board => board.x)), right = Math.max(...state.boards.map(board => board.x + BOARD_SIZES[board.size][0]));
   const top = Math.min(...state.boards.map(board => board.y)), bottom = Math.max(...state.boards.map(board => board.y + BOARD_SIZES[board.size][1]));
-  const scale = clamp(Math.min((view.clientWidth - padX * 2) / (right - left), (view.clientHeight - padTop - padBottom) / (bottom - top)), 2, 16);
-  boardArea.style.width = `${WORLD_W * scale}px`;
-  boardArea.style.left = `${(view.clientWidth - (right - left) * scale) / 2 - left * scale}px`;
-  boardArea.style.top = `${padTop + (view.clientHeight - padTop - padBottom - (bottom - top) * scale) / 2 - top * scale}px`;
+  fitScale = clamp(Math.min((viewport.clientWidth - padX * 2) / (right - left), (viewport.clientHeight - padTop - padBottom) / (bottom - top)), MIN_SCALE, 16);
+  camera.scale = fitScale;
+  camera.x = (viewport.clientWidth - (right - left) * fitScale) / 2 - left * fitScale;
+  camera.y = padTop + (viewport.clientHeight - padTop - padBottom - (bottom - top) * fitScale) / 2 - top * fitScale;
+  applyCamera();
 }
+function zoomAt(px, py, factor) {
+  const scale = clamp(camera.scale * factor, MIN_SCALE, MAX_SCALE);
+  camera.x = px - (px - camera.x) * scale / camera.scale;
+  camera.y = py - (py - camera.y) * scale / camera.scale;
+  camera.scale = scale; autoFit = false; applyCamera();
+}
+function zoomCenter(factor) { zoomAt(viewport.clientWidth / 2, viewport.clientHeight / 2, factor); }
+function panBy(dx, dy) { camera.x += dx; camera.y += dy; autoFit = false; applyCamera(); }
 
 function render() {
   if (!state.boards.some(board => board.id === selectedBoardId)) selectedBoardId = state.boards[0].id;
-  renderBoards(); renderBoardSelector(); renderParts(); renderSelection(); fitView();
+  renderBoards(); renderBoardSelector(); renderSelection(); if (autoFit) fitView();
   $('#projectName').value = state.name;
   document.querySelectorAll('[data-size]').forEach(button => { button.classList.toggle('active', button.dataset.size === currentBoard().size); button.setAttribute('aria-pressed', String(button.dataset.size === currentBoard().size)); });
   document.querySelectorAll('[data-color]').forEach(button => { button.classList.toggle('active', button.dataset.color === currentBoard().color); button.setAttribute('aria-pressed', String(button.dataset.color === currentBoard().color)); });
@@ -513,6 +524,31 @@ function nudgeSelected([dx, dy], holes) {
 }
 window.addEventListener('hashchange', () => { if (location.hash.startsWith('#layout=')) { const shared = decodeState(location.hash.slice(8)); if (shared) { state = shared; selectedId = null; selectedBoardId = state.boards[0].id; undoStack = []; redoStack = []; save(); render(); toast('Shared layout opened'); } } });
 renderCatalog(); render();
-new ResizeObserver(fitView).observe(boardArea.parentElement);
+new ResizeObserver(() => { if (autoFit) fitView(); }).observe(viewport);
+
+// Trackpad pinches arrive as ctrl+wheel (Chrome, Firefox, Edge) or gesture events (Safari).
+viewport.addEventListener('wheel', event => {
+  event.preventDefault();
+  const rect = viewport.getBoundingClientRect(), unit = event.deltaMode === 1 ? 16 : 1;
+  if (event.ctrlKey || event.metaKey) zoomAt(event.clientX - rect.left, event.clientY - rect.top, Math.exp(-event.deltaY * unit * 0.01));
+  else panBy(-event.deltaX * unit, -event.deltaY * unit);
+}, { passive: false });
+let gestureStart = null;
+viewport.addEventListener('gesturestart', event => { event.preventDefault(); const rect = viewport.getBoundingClientRect(); gestureStart = { scale: camera.scale, x: event.clientX - rect.left, y: event.clientY - rect.top }; });
+viewport.addEventListener('gesturechange', event => { event.preventDefault(); if (gestureStart) zoomAt(gestureStart.x, gestureStart.y, gestureStart.scale * event.scale / camera.scale); });
+viewport.addEventListener('gestureend', event => { event.preventDefault(); gestureStart = null; });
+viewport.addEventListener('pointerdown', event => {
+  if (event.button !== 0 || event.target.closest('.board-wrap')) return;
+  if (selectedId) { selectedId = null; render(); }
+  panning = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  viewport.setPointerCapture(event.pointerId); viewport.classList.add('panning');
+});
+viewport.addEventListener('pointermove', event => { if (panning?.id !== event.pointerId) return; panBy(event.clientX - panning.x, event.clientY - panning.y); panning.x = event.clientX; panning.y = event.clientY; });
+const endPan = event => { if (panning?.id === event.pointerId) { panning = null; viewport.classList.remove('panning'); } };
+viewport.addEventListener('pointerup', endPan);
+viewport.addEventListener('pointercancel', endPan);
+$('#zoomIn').addEventListener('click', () => zoomCenter(1.25));
+$('#zoomOut').addEventListener('click', () => zoomCenter(0.8));
+$('#zoomFit').addEventListener('click', () => { autoFit = true; fitView(); });
 if (!localStorage.getItem(STORAGE_KEY) && !location.hash.startsWith('#layout=')) dialog.showModal();
 save();
