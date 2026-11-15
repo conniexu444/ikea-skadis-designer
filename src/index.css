@@ -110,7 +110,7 @@ svg { flex: none; }
 /* No z-index on boards, so pieces hanging past an edge draw above neighbouring boards. */
 .board-wrap { position: absolute; touch-action: none; }
 .board-wrap.board-moving { opacity: .7; }
-.board { position: absolute; inset: 0; border: 5px solid; border-radius: 6px; touch-action: none; box-shadow: 0 1px 0 #ffffff80 inset, 0 18px 28px -10px #2b241a55, 0 4px 8px #2b241a26; transition: background-color .2s, border-color .2s; }
+.board { position: absolute; inset: 0; border: 5px solid; border-radius: 6px; touch-action: none; transition: background-color .2s, border-color .2s; }
 .board-white { background: #fbfbf8; border-color: #ecebe5; }
 .board-black { background: #34393c; border-color: #272c2f; }
 .board-wood { background: #cfae84; border-color: #b9926a; }
@@ -129,10 +129,10 @@ svg { flex: none; }
 .board-black .board-holes { fill: #15191b; }
 .board-wood .board-holes { fill: #7a5d3f; }
 .board-items { position: absolute; inset: 0; z-index: 2; }
-.board-item { position: absolute; display: grid; place-items: center; touch-action: none; filter: drop-shadow(1px 4px 3px #1d232b40); }
+.board-item { position: absolute; display: grid; place-items: center; touch-action: none; }
 .dragging, .dragging * { cursor: grabbing !important; }
 .board-item svg { width: 100%; height: 100%; overflow: visible; }
-.board-item.selected { filter: drop-shadow(1.5px 0 0 var(--accent)) drop-shadow(-1.5px 0 0 var(--accent)) drop-shadow(0 1.5px 0 var(--accent)) drop-shadow(0 -1.5px 0 var(--accent)) drop-shadow(1px 4px 3px #1d232b40); }
+.board-item.selected { filter: drop-shadow(1.5px 0 0 var(--accent)) drop-shadow(-1.5px 0 0 var(--accent)) drop-shadow(0 1.5px 0 var(--accent)) drop-shadow(0 -1.5px 0 var(--accent)); }
 .board-item.dragging { opacity: .35; }
 .board-pegs .peg { fill: var(--peg); stroke: #9a7419; stroke-width: 1px; }
 .board-pegs .peg.active { fill: var(--accent); stroke: #fff; }
@@ -140,7 +140,7 @@ svg { flex: none; }
 .peg-preview .preview-peg { fill: var(--accent); stroke: #fff; stroke-width: 1px; }
 .peg-preview.blocked .preview-body { fill: #d1493f1f; stroke: var(--danger); }
 .peg-preview.blocked .preview-peg { fill: var(--danger); }
-.drag-ghost { position: fixed; z-index: 50; pointer-events: none; display: grid; place-items: center; opacity: .85; filter: drop-shadow(3px 10px 8px #1d232b4d); }
+.drag-ghost { position: fixed; z-index: 50; pointer-events: none; display: grid; place-items: center; opacity: .85; }
 .drag-ghost svg { width: 100%; height: 100%; }
 
 /* Inspector */
