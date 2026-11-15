@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
-import { holeStats } from '../lib/holes'
 import { MAX_BOARDS } from '../lib/layout'
 import type { Planner } from '../hooks/usePlanner'
 
@@ -31,13 +30,11 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       <div id="boards-panel-body" className="panel-body" hidden={!open}>
       <div className="board-selector" role="group" aria-label="Choose a board">
         {layout.boards.map((board, i) => {
-          const { used, total } = holeStats(layout.items, board), active = board.id === selectedBoardId
+          const active = board.id === selectedBoardId
           return (
             <button key={board.id} className={`board-select ${active ? 'active' : ''}`} type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
               <strong>Board {i + 1}</strong>
               <small>{board.size.replace('x', ' × ')} cm · {board.color}</small>
-              <span className="meter" aria-hidden="true"><i style={{ width: `${used / total * 100}%` }} /></span>
-              <small>{used} / {total} holes used</small>
             </button>
           )
         })}
