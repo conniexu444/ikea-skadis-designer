@@ -14,6 +14,8 @@ import { HelpDialog } from './components/HelpDialog'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
 
+const SPONSOR_MESSAGE = 'Thank you Devin by Cognition for sponsoring this'
+
 const ARROWS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
 
 export default function App() {
@@ -74,6 +76,11 @@ export default function App() {
   return (
     <>
       <div className="app">
+        <div className="sponsor-banner" role="note" aria-label={SPONSOR_MESSAGE}>
+          <div className="sponsor-track" aria-hidden="true">
+            {Array.from({ length: 12 }, (_, index) => <span key={index}>{SPONSOR_MESSAGE}</span>)}
+          </div>
+        </div>
         <AppBar
           name={planner.layout.name} saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
           onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onDownload={download}

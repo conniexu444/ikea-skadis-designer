@@ -34,7 +34,12 @@ kbd { display: inline-block; min-width: 20px; padding: 1px 5px; border: 1px soli
 svg { flex: none; }
 
 /* App frame */
-.app { height: 100dvh; display: grid; grid-template-rows: 60px minmax(0, 1fr); }
+.app { height: 100dvh; display: grid; grid-template-rows: 26px 60px minmax(0, 1fr); }
+.sponsor-banner { overflow: hidden; background: #5b5f64; color: #f4f2ee; font: 400 16px/26px var(--display); letter-spacing: .03em; white-space: nowrap; }
+.sponsor-track { display: flex; width: max-content; animation: sponsor-scroll 60s linear infinite; }
+.sponsor-track span { padding-right: 72px; }
+@keyframes sponsor-scroll { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .sponsor-track { animation: none; } }
 .appbar { display: flex; align-items: center; gap: 20px; padding: 0 16px 0 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none; }
 .brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--ink); display: grid; grid-template-columns: repeat(3, 4px); grid-template-rows: repeat(2, 8px); gap: 4px 3px; place-content: center; }
