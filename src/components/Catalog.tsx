@@ -1,5 +1,5 @@
 import type { PointerEvent } from 'react'
-import { ACCESSORIES, plural, type AccessoryId } from '../lib/catalog'
+import { ACCESSORIES, type AccessoryId } from '../lib/catalog'
 import { Art } from './Art'
 
 interface Props {
@@ -12,7 +12,6 @@ export function Catalog({ onAdd, onStartDrag }: Props) {
     <section className="panel catalog" aria-label="Accessory catalog">
       <div className="sidebar-head">
         <h2>Accessories</h2>
-        <span className="count">{plural(ACCESSORIES.length, 'piece')}</span>
       </div>
       <div className="catalog-list">
         {ACCESSORIES.map(a => (

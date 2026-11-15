@@ -74,7 +74,6 @@ svg { flex: none; }
 .sidebar { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--divider); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .catalog { flex: 1; border-bottom: 0; }
 .sidebar-head, .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.count { color: var(--muted); font-size: 12px; white-space: nowrap; }
 
 /* Catalog */
 .catalog-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
