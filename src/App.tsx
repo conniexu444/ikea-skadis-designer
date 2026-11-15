@@ -99,7 +99,6 @@ export default function App() {
           <aside className="sidebar" aria-label="Boards and accessories">
             <BoardsPanel planner={planner} />
             <Catalog onAdd={type => planner.addAccessory(type)} onStartDrag={(event, type) => startPieceDrag(event, type)} />
-            <p className="disclaimer">Unofficial planning tool, not affiliated with IKEA. Sizes and hole spacing are approximate — check product details before buying. <a href="https://www.ikea.com/us/en/search/?q=SK%C3%85DIS" target="_blank" rel="noopener noreferrer">SKÅDIS at IKEA ↗</a></p>
           </aside>
           <Stage planner={planner} camera={camera} viewportRef={viewportRef} drag={drag} startPieceDrag={startPieceDrag} startBoardDrag={startBoardDrag} />
         </main>

@@ -17,11 +17,6 @@ export const DEFAULT_LAYOUT: Layout = {
   items: [
     ...cornerMounts('sample-1', 'board-1'),
     ...cornerMounts('sample-2', 'board-2'),
-    { id: 'sample-1', boardId: 'board-1', type: 'clip', col: 4, row: 4, rotation: 0 },
-    { id: 'sample-2', boardId: 'board-1', type: 'container', col: 6, row: 16, rotation: 0 },
-    { id: 'sample-3', boardId: 'board-2', type: 'hook', col: 20, row: 4, rotation: 0 },
-    { id: 'sample-4', boardId: 'board-2', type: 'basket', col: 4, row: 6, rotation: 0 },
-    { id: 'sample-5', boardId: 'board-2', type: 'shelf', col: 6, row: 20, rotation: 0 },
   ],
 }
 

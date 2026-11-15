@@ -10,7 +10,7 @@ describe('sanitizeLayout', () => {
   })
 
   it('moves a piece that would reuse a hole to a free one', () => {
-    const input = { ...DEFAULT_LAYOUT, items: [...DEFAULT_LAYOUT.items, { id: 'dup', boardId: 'board-1', type: 'hook', col: 1, row: 1, rotation: 0 }] }
+    const input = { ...DEFAULT_LAYOUT, items: [...DEFAULT_LAYOUT.items, { id: 'dup', boardId: 'board-1', type: 'wall-mount', col: 1, row: 1, rotation: 0 }] }
     const layout = sanitizeLayout(input)!
     const board = layout.boards[0]
     const onBoard = layout.items.filter(item => item.boardId === board.id)
@@ -107,7 +107,7 @@ describe('areaSelection', () => {
   const layout: Layout = {
     name: 'test',
     boards: [{ id: 'a', size: '36x56', color: 'white', x: 0, y: 0 }, { id: 'b', size: '56x56', color: 'white', x: 40, y: 0 }],
-    items: [{ id: 'p', boardId: 'b', type: 'hook', col: 2, row: 2, rotation: 0 }],
+    items: [{ id: 'p', boardId: 'b', type: 'wall-mount', col: 2, row: 2, rotation: 0 }],
   }
 
   it('selects a board only when it is fully inside the box', () => {
