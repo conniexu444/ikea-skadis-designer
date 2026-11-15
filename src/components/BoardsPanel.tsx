@@ -8,7 +8,7 @@ const label = (text: string) => text[0].toUpperCase() + text.slice(1)
 const COLLAPSED_KEY = 'pegboard-boards-collapsed'
 
 export function BoardsPanel({ planner }: { planner: Planner }) {
-  const { layout, selectedBoardId, currentBoard } = planner
+  const { layout, currentBoard, highlightedBoardIds, boardHighlighted } = planner
   const [open, setOpen] = useState(() => localStorage.getItem(COLLAPSED_KEY) !== '1')
   function toggle() {
     setOpen(!open)
@@ -27,24 +27,28 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       <div className="panel-body">
       <div className="board-selector" role="group" aria-label="Choose a board">
         {layout.boards.map((board, i) => {
-          const active = board.id === selectedBoardId
+          const active = highlightedBoardIds.has(board.id)
           return (
-            <button key={board.id} className={`board-select ${active ? 'active' : ''}`} type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
-              <strong>Board {i + 1}</strong>
-              <small>{board.size.replace('x', ' × ')} cm</small>
-            </button>
+            <div key={board.id} className={`board-card ${active ? 'active' : ''}`}>
+              <button className="board-select" type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
+                <strong>Board {i + 1}</strong>
+                <small>{board.size.replace('x', ' × ')} cm</small>
+              </button>
+              {layout.boards.length > 1 && (
+                <button className="board-remove" type="button" aria-label={`Remove board ${i + 1}`} title="Remove board" onClick={() => planner.removeBoard(board.id)}>×</button>
+              )}
+            </div>
           )
         })}
       </div>
-      <div className="board-actions">
-        <button type="button" className="text-button" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add</button>
-        <button type="button" className="text-button muted" disabled={layout.boards.length <= 1} onClick={planner.removeBoard}>Remove</button>
-      </div>
+      <button type="button" className="button add-board" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add board</button>
+      <fieldset className="board-settings" disabled={!boardHighlighted}>
+      {!boardHighlighted && <p className="board-settings-hint">Select a board to change its size or finish.</p>}
       <div className="field">
         <span className="field-label">Size <small>cm</small></span>
         <div className="segmented" role="group" aria-label="Selected board size">
           {(Object.keys(BOARD_SIZES) as BoardSize[]).map(size => (
-            <button key={size} className={`size-choice ${size === currentBoard.size ? 'active' : ''}`} type="button" aria-pressed={size === currentBoard.size} onClick={() => planner.changeSize(size)}>
+            <button key={size} className={`size-choice ${boardHighlighted && size === currentBoard.size ? 'active' : ''}`} type="button" aria-pressed={boardHighlighted && size === currentBoard.size} onClick={() => planner.changeSize(size)}>
               <span className={`size-graphic ${SIZE_GRAPHIC[size]}`} aria-hidden="true" />{size.replace('x', ' × ')}
             </button>
           ))}
@@ -54,12 +58,13 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
         <span className="field-label">Finish</span>
         <div className="segmented" role="group" aria-label="Selected board finish">
           {FINISHES.map(color => (
-            <button key={color} className={`color-choice ${color === currentBoard.color ? 'active' : ''}`} type="button" aria-pressed={color === currentBoard.color} onClick={() => planner.changeColor(color)}>
+            <button key={color} className={`color-choice ${boardHighlighted && color === currentBoard.color ? 'active' : ''}`} type="button" aria-pressed={boardHighlighted && color === currentBoard.color} onClick={() => planner.changeColor(color)}>
               <span className={`swatch ${color}`} aria-hidden="true" />{label(color)}
             </button>
           ))}
         </div>
       </div>
+      </fieldset>
       </div>
       </div>
     </section>

@@ -164,14 +164,15 @@ export function usePlanner() {
     commit(draft => { draft.boards.push({ id, size: '56x56', color: currentBoard.color, ...spot }) })
     selectBoard(id)
   }
-  function removeBoard() {
+  function removeBoard(boardId = selectedBoardId) {
     if (layout.boards.length <= 1) return
-    const boardId = selectedBoardId
     commit(draft => {
       draft.boards = draft.boards.filter(board => board.id !== boardId)
       draft.items = draft.items.filter(item => item.boardId !== boardId)
     })
-    setSelectedId(null); setArea(null); setChosenBoardId(null)
+    if (selectedItem?.boardId === boardId) setSelectedId(null)
+    setArea(null)
+    if (boardId === selectedBoardId) { setChosenBoardId(null); setBoardHighlighted(false) }
   }
   /** Moves a board unless it would overlap another one. Returns whether it moved. */
   function moveBoard(id: string, x: number, y: number) {
