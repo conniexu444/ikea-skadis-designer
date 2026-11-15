@@ -110,7 +110,6 @@ export const encodeLayout = (layout: Layout) => encodeURIComponent(JSON.stringif
 export function sharedLayout(hash: string) {
   return hash.startsWith(HASH_PREFIX) ? decodeLayout(hash.slice(HASH_PREFIX.length)) : null
 }
-export const shareLink = (layout: Layout) => `${location.origin}${location.pathname}${HASH_PREFIX}${encodeLayout(layout)}`
 
 export function readInitialLayout(): Layout {
   const shared = sharedLayout(location.hash)

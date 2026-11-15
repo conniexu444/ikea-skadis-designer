@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { accessory } from './lib/catalog'
 import { downloadPng } from './lib/exportPng'
-import { overlapsAny, shareLink, sharedLayout } from './lib/layout'
+import { overlapsAny, sharedLayout } from './lib/layout'
 import { useCamera } from './hooks/useCamera'
 import { useDrag } from './hooks/useDrag'
 import { useLatest } from './hooks/useLatest'
@@ -66,21 +66,6 @@ export default function App() {
     }
   }, [latest])
 
-  async function copyLink() {
-    const link = shareLink(planner.layout)
-    try {
-      await navigator.clipboard.writeText(link)
-      planner.notify('Shareable link copied')
-    } catch {
-      const input = document.createElement('textarea')
-      input.value = link
-      document.body.appendChild(input)
-      input.select()
-      const ok = document.execCommand('copy')
-      input.remove()
-      planner.notify(ok ? 'Shareable link copied' : 'Copying is unavailable here')
-    }
-  }
   async function download() {
     planner.notify(await downloadPng(planner.layout) ? 'Layout image downloaded' : 'Could not create an image')
   }
@@ -91,7 +76,7 @@ export default function App() {
       <div className="app">
         <AppBar
           name={planner.layout.name} saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
-          onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onHelp={() => setHelpOpen(true)} onShare={copyLink} onDownload={download}
+          onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onDownload={download}
         />
         <main className="workbench">
           <aside className="sidebar" aria-label="Boards and accessories">
