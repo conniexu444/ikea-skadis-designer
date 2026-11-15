@@ -14,7 +14,7 @@ import { HelpDialog } from './components/HelpDialog'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
 
-const BANNER_MESSAGES = ['Thank you Devin by Cognition for sponsoring this', 'Made by ConnieCodes']
+const BANNER_MESSAGE = 'Made by ConnieCodes Using Devin by Cognition'
 
 const ARROWS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
 
@@ -76,9 +76,9 @@ export default function App() {
   return (
     <>
       <div className="app">
-        <div className="sponsor-banner" role="note" aria-label={BANNER_MESSAGES.join('. ')}>
+        <div className="sponsor-banner" role="note" aria-label={BANNER_MESSAGE}>
           <div className="sponsor-track" aria-hidden="true">
-            {[...BANNER_MESSAGES, ...BANNER_MESSAGES].map((message, index) => <span key={index}>{message}</span>)}
+            {Array.from({ length: 4 }, (_, index) => <span key={index}>{BANNER_MESSAGE}</span>)}
           </div>
         </div>
         <AppBar
