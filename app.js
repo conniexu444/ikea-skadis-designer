@@ -1,15 +1,20 @@
+const HOLE_PITCH = 2, HOLE_MARGIN = 2;
 const ACCESSORIES = [
-  { id: 'hook', name: 'Hook', group: 'small', w: 7, h: 8, detail: 'For headphones, keys & more' },
-  { id: 'double-hook', name: 'Double hook', group: 'small', w: 13, h: 8, detail: 'A little extra hanging room' },
-  { id: 'container', name: 'Container', group: 'storage', w: 14, h: 16, detail: 'For pens and small things' },
-  { id: 'shelf', name: 'Shelf', group: 'display', w: 28, h: 8, detail: 'Keep favorites on show' },
-  { id: 'basket', name: 'Mesh basket', group: 'storage', w: 24, h: 16, detail: 'An open home for essentials' },
-  { id: 'clip', name: 'Clip', group: 'small', w: 7, h: 9, detail: 'Pin a note or photo' },
-  { id: 'letter-holder', name: 'Letter holder', group: 'storage', w: 20, h: 17, detail: 'Tidy papers and mail' },
-  { id: 'elastic', name: 'Elastic cord', group: 'display', w: 20, h: 12, detail: 'Tuck things into place' }
+  { id: 'wall-mount', name: 'Wall mount', group: 'mounting', w: 3, h: 3, pegs: [[0, 0]], detail: 'Screws the board to the wall' },
+  { id: 'hook', name: 'Hook', group: 'small', w: 7, h: 8, pegs: [[0, 0]], detail: 'For headphones, keys & more' },
+  { id: 'double-hook', name: 'Double hook', group: 'small', w: 13, h: 8, pegs: [[0, 0], [4, 0]], detail: 'A little extra hanging room' },
+  { id: 'container', name: 'Container', group: 'storage', w: 14, h: 16, pegs: [[0, 0], [8, 0]], detail: 'For pens and small things' },
+  { id: 'shelf', name: 'Shelf', group: 'display', w: 28, h: 8, pegs: [[0, 0], [24, 0]], detail: 'Keep favorites on show' },
+  { id: 'basket', name: 'Mesh basket', group: 'storage', w: 24, h: 16, pegs: [[0, 0], [16, 0]], detail: 'An open home for essentials' },
+  { id: 'clip', name: 'Clip', group: 'small', w: 7, h: 9, pegs: [[0, 0]], detail: 'Pin a note or photo' },
+  { id: 'letter-holder', name: 'Letter holder', group: 'storage', w: 20, h: 17, pegs: [[0, 0], [12, 0]], detail: 'Tidy papers and mail' },
+  { id: 'elastic', name: 'Elastic cord', group: 'display', w: 20, h: 12, pegs: [[0, 0], [16, 0], [0, 8], [16, 8]], top: 2, detail: 'Tuck things into place' }
 ];
 const BOARD_SIZES = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] };
 const WORLD_W = 170, WORLD_H = 82;
+const STORAGE_KEY = 'skadis-studio-v3';
+const ISSUE_MESSAGES = { taken: 'Those holes are already in use — each hole can only hold one thing', edge: 'That piece doesn’t fit there on the board' };
+const cornerMounts = (prefix, boardId) => [[1, 1], [25, 1], [1, 25], [25, 25]].map(([col, row], i) => ({ id: `${prefix}-mount-${i + 1}`, boardId, type: 'wall-mount', col, row, rotation: 0 }));
 const DEFAULT_STATE = {
   name: 'My perfect setup',
   boards: [
@@ -17,11 +22,13 @@ const DEFAULT_STATE = {
     { id: 'board-2', size: '56x56', color: 'white', x: 85, y: 15 }
   ],
   items: [
-    { id: 'sample-1', boardId: 'board-1', type: 'clip', x: 8, y: 8, rotation: 0 },
-    { id: 'sample-2', boardId: 'board-1', type: 'container', x: 11, y: 30, rotation: 0 },
-    { id: 'sample-3', boardId: 'board-2', type: 'hook', x: 38, y: 8, rotation: 0 },
-    { id: 'sample-4', boardId: 'board-2', type: 'basket', x: 8, y: 8, rotation: 0 },
-    { id: 'sample-5', boardId: 'board-2', type: 'shelf', x: 13, y: 39, rotation: 0 }
+    ...cornerMounts('sample-1', 'board-1'),
+    ...cornerMounts('sample-2', 'board-2'),
+    { id: 'sample-1', boardId: 'board-1', type: 'clip', col: 4, row: 4, rotation: 0 },
+    { id: 'sample-2', boardId: 'board-1', type: 'container', col: 6, row: 16, rotation: 0 },
+    { id: 'sample-3', boardId: 'board-2', type: 'hook', col: 20, row: 4, rotation: 0 },
+    { id: 'sample-4', boardId: 'board-2', type: 'basket', col: 4, row: 6, rotation: 0 },
+    { id: 'sample-5', boardId: 'board-2', type: 'shelf', col: 6, row: 20, rotation: 0 }
   ]
 };
 const $ = (selector) => document.querySelector(selector);
@@ -41,8 +48,11 @@ let toastTimer;
 function readInitialState() {
   const shared = location.hash.startsWith('#layout=') ? decodeState(location.hash.slice(8)) : null;
   if (shared) return shared;
-  try { return sanitizeState(JSON.parse(localStorage.getItem('skadis-studio-v2'))) || sanitizeState(JSON.parse(localStorage.getItem('skadis-studio-v1'))) || structuredClone(DEFAULT_STATE); }
-  catch { return structuredClone(DEFAULT_STATE); }
+  for (const key of [STORAGE_KEY, 'skadis-studio-v2', 'skadis-studio-v1']) {
+    try { const loaded = sanitizeState(JSON.parse(localStorage.getItem(key))); if (loaded) return loaded; }
+    catch { /* try the next saved version */ }
+  }
+  return structuredClone(DEFAULT_STATE);
 }
 function decodeState(value) {
   try { return sanitizeState(JSON.parse(decodeURIComponent(value))); }
@@ -64,20 +74,25 @@ function sanitizeState(input) {
   }
   if (!boards?.length) return null;
   if (boards.length > 1 && boardRectOverlaps(boards[0], boards[1])) boards[1].x = clamp(boards[0].x + BOARD_SIZES[boards[0].size][0], 0, WORLD_W - BOARD_SIZES[boards[1].size][0]);
-  return {
-    name: String(input.name || 'My perfect setup').slice(0, 60), boards,
-    items: input.items.slice(0, 100).filter(item => ACCESSORIES.some(a => a.id === item.type)).map((item, i) => {
-      const a = ACCESSORIES.find(a => a.id === item.type);
-      const rotation = Number(item.rotation) === 90 ? 90 : 0;
-      const boardIndex = Array.isArray(input.boards) ? input.boards.findIndex(board => board.id === item.boardId) : 0;
-      const board = boards[Math.max(0, Math.min(boardIndex, boards.length - 1))];
-      const [bw, bh] = BOARD_SIZES[board.size];
-      return { id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, x: clamp(Number(item.x) || 0, 0, bw - (rotation ? a.h : a.w)), y: clamp(Number(item.y) || 0, 0, bh - (rotation ? a.w : a.h)), rotation };
-    })
-  };
+  const items = [];
+  input.items.slice(0, 200).forEach((item, i) => {
+    const a = accessory(item?.type); if (!a) return;
+    const rotation = Number(item.rotation) === 90 ? 90 : 0;
+    const boardIndex = Array.isArray(input.boards) ? input.boards.findIndex(board => board.id === item.boardId) : 0;
+    const board = boards[Math.max(0, Math.min(boardIndex, boards.length - 1))];
+    let col = Number(item.col), row = Number(item.row);
+    if (!Number.isInteger(col) || !Number.isInteger(row)) [col, row] = anchorFor(board.size, a.id, rotation, Number(item.x) || 0, Number(item.y) || 0);
+    if (placementIssue(board, a.id, rotation, col, row, usedHoles(items, board.id))) {
+      const spot = findSpot(board, items, a.id, rotation, [col, row]);
+      if (!spot) return;
+      [col, row] = spot;
+    }
+    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation });
+  });
+  return { name: String(input.name || 'My perfect setup').slice(0, 60), boards, items };
 }
 function save() {
-  try { localStorage.setItem('skadis-studio-v2', JSON.stringify(state)); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   catch { $('#saveStatus').textContent = 'Storage unavailable — download or share your layout'; }
 }
 function snapshot() { return structuredClone(state); }
@@ -87,11 +102,68 @@ function commit(change) {
 }
 function clamp(n, min, max) { return Math.min(Math.max(n, min), Math.max(min, max)); }
 function accessory(type) { return ACCESSORIES.find(item => item.id === type); }
-function footprint(item) { const a = accessory(item.type); return item.rotation === 90 ? [a.h, a.w] : [a.w, a.h]; }
 function currentBoard() { return state.boards.find(board => board.id === selectedBoardId) || state.boards[0]; }
 function boardRectOverlaps(a, b) { const aw = BOARD_SIZES[a.size][0], bw = BOARD_SIZES[b.size][0]; return a.x < b.x + bw && a.x + aw > b.x && a.y < b.y + 56 && a.y + 56 > b.y; }
 function escapeHTML(str) { return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
 function nextId() { return `piece-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
+
+// SKÅDIS holes sit on a staggered grid: 2 cm apart diagonally, so holes in the same row or column are 4 cm apart.
+function holeGrid(size) {
+  const [bw, bh] = BOARD_SIZES[size];
+  return { cols: Math.round((bw - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1, rows: Math.round((bh - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1 };
+}
+function holeExists(size, col, row) {
+  const { cols, rows } = holeGrid(size);
+  return Number.isInteger(col) && Number.isInteger(row) && col >= 0 && row >= 0 && col < cols && row < rows && (col + row) % 2 === 0;
+}
+function holePoint(col, row) { return [HOLE_MARGIN + col * HOLE_PITCH, HOLE_MARGIN + row * HOLE_PITCH]; }
+function holeKey(col, row) { return `${col},${row}`; }
+function allHoles(size) {
+  const { cols, rows } = holeGrid(size), holes = [];
+  for (let row = 0; row < rows; row++) for (let col = row % 2; col < cols; col += 2) holes.push([col, row]);
+  return holes;
+}
+function geometry(type, rotation = 0) {
+  const a = accessory(type), xs = a.pegs.map(peg => peg[0]), ys = a.pegs.map(peg => peg[1]);
+  const ox = (Math.min(...xs) + Math.max(...xs)) / 2 - a.w / 2, oy = Math.min(...ys) - (a.top ?? 1.5);
+  const pegs = a.pegs.map(([x, y]) => rotation === 90 ? [-y, x] : [x, y]);
+  return { pegs, rect: rotation === 90 ? [-(oy + a.h), ox, a.h, a.w] : [ox, oy, a.w, a.h] };
+}
+function placement(type, rotation, col, row) {
+  const { pegs, rect } = geometry(type, rotation), [ax, ay] = holePoint(col, row);
+  return { holes: pegs.map(([x, y]) => [col + x / HOLE_PITCH, row + y / HOLE_PITCH]), rect: [ax + rect[0], ay + rect[1], rect[2], rect[3]] };
+}
+function itemPlacement(item) { return placement(item.type, item.rotation, item.col, item.row); }
+function usedHoles(items, boardId, ignoreId = null) {
+  const used = new Set();
+  items.forEach(item => { if (item.boardId === boardId && item.id !== ignoreId) itemPlacement(item).holes.forEach(([col, row]) => used.add(holeKey(col, row))); });
+  return used;
+}
+function placementIssue(board, type, rotation, col, row, used) {
+  const { holes, rect } = placement(type, rotation, col, row), [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6;
+  const fits = holes.every(([c, r]) => holeExists(board.size, c, r)) && rect[0] >= -eps && rect[1] >= -eps && rect[0] + rect[2] <= bw + eps && rect[1] + rect[3] <= bh + eps;
+  if (!fits) return 'edge';
+  return holes.some(([c, r]) => used.has(holeKey(c, r))) ? 'taken' : null;
+}
+function nearestHole(size, x, y) {
+  const { cols, rows } = holeGrid(size), fc = (x - HOLE_MARGIN) / HOLE_PITCH, fr = (y - HOLE_MARGIN) / HOLE_PITCH;
+  let best = null, bestDistance = Infinity;
+  for (let col = Math.floor(fc) - 1; col <= Math.ceil(fc) + 1; col++) for (let row = Math.floor(fr) - 1; row <= Math.ceil(fr) + 1; row++) {
+    const c = clamp(col, 0, cols - 1), r = clamp(row, 0, rows - 1);
+    if (!holeExists(size, c, r)) continue;
+    const distance = Math.hypot(c - fc, r - fr);
+    if (distance < bestDistance) { best = [c, r]; bestDistance = distance; }
+  }
+  return best || [0, 0];
+}
+function anchorFor(size, type, rotation, x, y) { const { rect } = geometry(type, rotation); return nearestHole(size, x - rect[0], y - rect[1]); }
+function findSpot(board, items, type, rotation, near = null, ignoreId = null) {
+  const used = usedHoles(items, board.id, ignoreId), holes = allHoles(board.size);
+  if (near) holes.sort((a, b) => Math.hypot(a[0] - near[0], (a[1] - near[1]) * 1.01) - Math.hypot(b[0] - near[0], (b[1] - near[1]) * 1.01));
+  return holes.find(([col, row]) => !placementIssue(board, type, rotation, col, row, used)) || null;
+}
+function holeStats(board) { return { used: usedHoles(state.items, board.id).size, total: allHoles(board.size).length }; }
 
 function art(type, attributes = '') {
   const white = '#f8f9f6', edge = '#aab4b0', shade = '#e3e9e5', dark = '#6d8281';
@@ -106,29 +178,35 @@ function art(type, attributes = '') {
     basket: `<path d="M12 28h76l-8 60H20z" fill="${white}" stroke="${edge}" stroke-width="3"/><path d="M14 31h72M21 48h58M19 66h62M29 30l4 54M43 30l2 55M57 30l-2 55M71 30l-4 54" stroke="${edge}" stroke-width="1.5"/><path d="M12 27h76" stroke="${shade}" stroke-width="7" stroke-linecap="round"/><path d="M24 14v12M76 14v12" stroke="${dark}" stroke-width="3" stroke-linecap="round"/>`,
     clip: `<path d="M50 12v21" stroke="${dark}" stroke-width="5" stroke-linecap="round"/><path d="M33 37h34l6 27-23 22-23-22z" fill="${white}" stroke="${edge}" stroke-width="3"/><path d="M36 45h28M40 55h20" stroke="${shade}" stroke-width="3"/><circle cx="50" cy="37" r="8" fill="${shade}" stroke="${edge}" stroke-width="2"/>`,
     'letter-holder': `<path d="M12 24h76v62H12z" fill="${white}" stroke="${edge}" stroke-width="3"/><path d="M12 55 50 73l38-18" fill="none" stroke="${edge}" stroke-width="3"/><path d="M20 32h60M26 40h48" stroke="${shade}" stroke-width="3"/><path d="M22 15v9M78 15v9" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`,
-    elastic: `<circle cx="15" cy="19" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="85" cy="19" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="15" cy="81" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="85" cy="81" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><path d="M15 19 85 81M85 19 15 81" fill="none" stroke="#8d9f9a" stroke-width="7" stroke-linecap="round"/><path d="M15 19 85 81M85 19 15 81" fill="none" stroke="${shade}" stroke-width="2"/>`
+    elastic: `<circle cx="15" cy="19" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="85" cy="19" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="15" cy="81" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="85" cy="81" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><path d="M15 19 85 81M85 19 15 81" fill="none" stroke="#8d9f9a" stroke-width="7" stroke-linecap="round"/><path d="M15 19 85 81M85 19 15 81" fill="none" stroke="${shade}" stroke-width="2"/>`,
+    'wall-mount': `<circle cx="50" cy="50" r="38" fill="${white}" stroke="${edge}" stroke-width="5"/><circle cx="50" cy="50" r="27" fill="${shade}"/><path d="M35 50h30M50 35v30" stroke="${dark}" stroke-width="8" stroke-linecap="round"/>`,
   };
   return start + shapes[type] + end;
 }
 function renderCatalog() {
   const visible = ACCESSORIES.filter(a => (filter === 'all' || a.group === filter) && `${a.name} ${a.detail}`.toLowerCase().includes(query));
-  $('#catalogCount').textContent = `${visible.length} ${visible.length === 1 ? 'piece' : 'pieces'}`;
-  catalogList.innerHTML = visible.length ? visible.map(a => `<div class="catalog-card" data-type="${a.id}" role="group" aria-label="${a.name}"><div class="catalog-thumb">${art(a.id)}</div><div class="catalog-info"><strong>${a.name}</strong><small>${a.detail}</small></div><button class="add-button" data-add="${a.id}" type="button" aria-label="Add ${a.name}">+</button></div>`).join('') : '<p class="catalog-empty">No pieces found. Try another search.</p>';
+  $('#catalogCount').textContent = plural(visible.length, 'piece');
+  catalogList.innerHTML = visible.length ? visible.map(a => `<div class="catalog-card" data-type="${a.id}" role="group" aria-label="${a.name}"><div class="catalog-thumb">${art(a.id)}</div><div class="catalog-info"><strong>${a.name}</strong><small>${a.detail}</small><small class="hole-count">Uses ${plural(a.pegs.length, 'hole')}</small></div><button class="add-button" data-add="${a.id}" type="button" aria-label="Add ${a.name}">+</button></div>`).join('') : '<p class="catalog-empty">No accessories match that search.</p>';
 }
+function slot(col, row, attributes = '') { const [x, y] = holePoint(col, row); return `<rect x="${x - 0.25}" y="${y - 0.75}" width="0.5" height="1.5" rx="0.25" ${attributes}/>`; }
 function renderBoards() {
-  $('#sizeLabel').textContent = `${state.boards.length} ${state.boards.length === 1 ? 'board' : 'boards'} · drag handles to arrange`;
+  const holesUsed = state.boards.reduce((sum, board) => sum + holeStats(board).used, 0), holesTotal = state.boards.reduce((sum, board) => sum + holeStats(board).total, 0);
+  $('#sizeLabel').textContent = `${plural(state.boards.length, 'board')} · ${holesUsed} of ${holesTotal} holes used`;
   boardLayer.innerHTML = state.boards.map((board, index) => {
-    const [bw, bh] = BOARD_SIZES[board.size];
-    const pieces = state.items.filter(item => item.boardId === board.id).map(item => {
-      const a = accessory(item.type), [w, h] = footprint(item), rotated = item.rotation === 90;
+    const [bw, bh] = BOARD_SIZES[board.size], items = state.items.filter(item => item.boardId === board.id);
+    const pieces = items.map(item => {
+      const a = accessory(item.type), [x, y, w, h] = itemPlacement(item).rect, rotated = item.rotation === 90;
       const svg = art(item.type, rotated ? `style="position:absolute;left:50%;top:50%;width:${a.w / w * 100}%;height:${a.h / h * 100}%;transform:translate(-50%,-50%) rotate(90deg)"` : '');
-      return `<div class="board-item ${item.id === selectedId ? 'selected' : ''} ${dragging?.id === item.id ? 'dragging' : ''}" data-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${a.name}, select and drag to move" style="left:${item.x / bw * 100}%;top:${item.y / bh * 100}%;width:${w / bw * 100}%;height:${h / bh * 100}%">${svg}</div>`;
+      return `<div class="board-item ${item.id === selectedId ? 'selected' : ''} ${dragging?.id === item.id ? 'dragging' : ''}" data-id="${escapeHTML(item.id)}" tabindex="0" role="button" aria-label="${a.name}, uses ${plural(a.pegs.length, 'hole')}, select and drag to move" style="left:${x / bw * 100}%;top:${y / bh * 100}%;width:${w / bw * 100}%;height:${h / bh * 100}%">${svg}</div>`;
     }).join('');
-    return `<div class="board-wrap ${board.id === selectedBoardId ? 'selected-board' : ''} ${dragging?.kind === 'board' && dragging.id === board.id ? 'board-moving' : ''}" data-board-id="${board.id}" style="left:${board.x / WORLD_W * 100}%;top:${board.y / WORLD_H * 100}%;width:${bw / WORLD_W * 100}%;height:${bh / WORLD_H * 100}%"><button class="board-grip" type="button" data-grip="${board.id}" aria-label="Drag board ${index + 1} to move it"><span class="grip-dots" aria-hidden="true">⠿</span> Move board ${index + 1}</button><div class="board board-${board.color}" role="group" aria-label="Board ${index + 1}, ${bw} by ${bh} centimeters, ${board.color}"><span class="board-index">BOARD ${String(index + 1).padStart(2, '0')}</span><div class="board-items">${pieces}</div></div></div>`;
+    const holes = allHoles(board.size).map(([col, row]) => slot(col, row)).join('');
+    const pegs = items.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item).holes.map(([col, row]) => slot(col, row, `class="peg ${item.id === selectedId ? 'active' : ''}" vector-effect="non-scaling-stroke"`)).join('')).join('');
+    const svgLayer = (className, content) => `<svg class="${className}" viewBox="0 0 ${bw} ${bh}" preserveAspectRatio="none" aria-hidden="true">${content}</svg>`;
+    return `<div class="board-wrap ${board.id === selectedBoardId ? 'selected-board' : ''} ${dragging?.kind === 'board' && dragging.id === board.id ? 'board-moving' : ''}" data-board-id="${board.id}" style="left:${board.x / WORLD_W * 100}%;top:${board.y / WORLD_H * 100}%;width:${bw / WORLD_W * 100}%;height:${bh / WORLD_H * 100}%"><button class="board-grip" type="button" data-grip="${board.id}" aria-label="Drag board ${index + 1} to move it"><span class="grip-dots" aria-hidden="true">⠿</span> Move board ${index + 1}</button><div class="board board-${board.color}" role="group" aria-label="Board ${index + 1}, ${bw} by ${bh} centimeters, ${board.color}"><span class="board-index">BOARD ${String(index + 1).padStart(2, '0')}</span>${svgLayer('board-holes', holes)}<div class="board-items">${pieces}</div>${svgLayer('board-pegs', `${pegs}<g class="peg-preview"></g>`)}</div></div>`;
   }).join('');
 }
 function renderBoardSelector() {
-  $('#boardSelector').innerHTML = state.boards.map((board, i) => `<button class="board-select ${board.id === selectedBoardId ? 'active' : ''}" data-select-board="${board.id}" type="button" aria-pressed="${board.id === selectedBoardId}"><strong>Board ${i + 1}</strong><small>${board.size.replace('x', ' × ')} cm · ${board.color}</small></button>`).join('');
+  $('#boardSelector').innerHTML = state.boards.map((board, i) => { const { used, total } = holeStats(board); return `<button class="board-select ${board.id === selectedBoardId ? 'active' : ''}" data-select-board="${board.id}" type="button" aria-pressed="${board.id === selectedBoardId}"><strong>Board ${i + 1}</strong><small>${board.size.replace('x', ' × ')} cm · ${board.color}</small><small>${used} / ${total} holes used</small></button>`; }).join('');
   $('#addBoardButton').disabled = state.boards.length >= 2;
   $('#removeBoardButton').disabled = state.boards.length <= 1;
 }
@@ -146,7 +224,7 @@ function renderSelection() {
   if (!item) { panel.hidden = true; selectedId = null; return; }
   const a = accessory(item.type);
   panel.hidden = false;
-  panel.innerHTML = `<div class="selection-heading"><span class="mini-art">${art(a.id)}</span><span><strong>${a.name}</strong><small>Selected accessory</small></span></div><div class="selection-actions"><button data-action="rotate" type="button">↻ Rotate</button><button data-action="duplicate" type="button">⧉ Copy</button><button data-action="remove" type="button">× Remove</button></div>`;
+  panel.innerHTML = `<div class="selection-heading"><span class="mini-art">${art(a.id)}</span><span><strong>${a.name}</strong><small>Uses ${plural(a.pegs.length, 'hole')}</small></span></div><div class="selection-actions"><button data-action="rotate" type="button">↻ Rotate</button><button data-action="duplicate" type="button">⧉ Copy</button><button data-action="remove" type="button">× Remove</button></div>`;
 }
 function render() {
   if (!state.boards.some(board => board.id === selectedBoardId)) selectedBoardId = state.boards[0].id;
@@ -157,37 +235,49 @@ function render() {
   $('#undoButton').disabled = !undoStack.length; $('#redoButton').disabled = !redoStack.length;
 }
 function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600); }
-function overlaps(boardId, x, y, w, h) {
-  return state.items.some(item => { if (item.boardId !== boardId) return false; const [iw, ih] = footprint(item); return x < item.x + iw && x + w > item.x && y < item.y + ih && y + h > item.y; });
-}
-function findSpace(a, board) {
-  const [bw, bh] = BOARD_SIZES[board.size];
-  for (let y = 4; y <= bh - a.h; y += 3) for (let x = 4; x <= bw - a.w; x += 3) if (!overlaps(board.id, x, y, a.w, a.h)) return [x, y];
-  return [clamp((bw - a.w) / 2, 0, bw - a.w), clamp((bh - a.h) / 2, 0, bh - a.h)];
-}
-function addAccessory(type, position, boardId = selectedBoardId) {
-  const a = accessory(type), board = state.boards.find(board => board.id === boardId) || currentBoard(); if (!a) return;
-  const [bw, bh] = BOARD_SIZES[board.size], [x, y] = position || findSpace(a, board), id = nextId();
-  commit(() => { state.items.push({ id, boardId: board.id, type, x: clamp(x, 0, bw - a.w), y: clamp(y, 0, bh - a.h), rotation: 0 }); selectedId = id; selectedBoardId = board.id; });
-  toast(`${a.name} added to ${boardLabel(board.id)}`);
+function addAccessory(type, spot = null, boardId = selectedBoardId) {
+  const a = accessory(type); if (!a) return;
+  const preferred = state.boards.find(board => board.id === boardId) || currentBoard();
+  let board = preferred, position = spot;
+  if (!position) {
+    for (const candidate of [preferred, ...state.boards.filter(entry => entry !== preferred)]) {
+      position = findSpot(candidate, state.items, type, 0);
+      if (position) { board = candidate; break; }
+    }
+  }
+  if (!position) { toast(`No free holes left for a ${a.name.toLowerCase()}`); return; }
+  const id = nextId();
+  commit(() => { state.items.push({ id, boardId: board.id, type, col: position[0], row: position[1], rotation: 0 }); selectedId = id; selectedBoardId = board.id; });
+  toast(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`);
 }
 function boardLabel(id) { return `board ${state.boards.findIndex(board => board.id === id) + 1}`; }
+function refitItems(board) {
+  const kept = state.items.filter(item => item.boardId !== board.id);
+  let removed = 0;
+  state.items.filter(item => item.boardId === board.id).forEach(item => {
+    const spot = placementIssue(board, item.type, item.rotation, item.col, item.row, usedHoles(kept, board.id)) ? findSpot(board, kept, item.type, item.rotation, [item.col, item.row]) : [item.col, item.row];
+    if (spot) kept.push({ ...item, col: spot[0], row: spot[1] }); else removed++;
+  });
+  state.items = kept;
+  return removed;
+}
 function changeSize(size) {
   const board = currentBoard(); if (size === board.size) return;
+  let removed = 0;
   commit(() => {
     board.size = size;
-    const [bw, bh] = BOARD_SIZES[size];
+    const [bw] = BOARD_SIZES[size];
     board.x = clamp(board.x, 0, WORLD_W - bw);
-    state.items.filter(item => item.boardId === board.id).forEach(item => { const [w, h] = footprint(item); item.x = clamp(item.x, 0, bw - w); item.y = clamp(item.y, 0, bh - h); });
+    removed = refitItems(board);
     const other = state.boards.find(entry => entry.id !== board.id);
     if (other && boardRectOverlaps(board, other)) {
-      const [ow] = BOARD_SIZES[other.size];
       const left = board.x <= other.x ? board : other, right = left === board ? other : board;
       const leftWidth = BOARD_SIZES[left.size][0], rightWidth = BOARD_SIZES[right.size][0];
       left.x = clamp(left.x, 0, WORLD_W - leftWidth - rightWidth);
       right.x = left.x + leftWidth;
     }
   });
+  if (removed) toast(`${plural(removed, 'piece')} didn’t fit the smaller board — Undo brings them back`);
 }
 function addBoard() {
   if (state.boards.length >= 2) return;
@@ -204,21 +294,32 @@ function removeBoard() {
 }
 function selectedAction(action) {
   const item = state.items.find(item => item.id === selectedId); if (!item) return;
-  const board = state.boards.find(board => board.id === item.boardId), [bw, bh] = BOARD_SIZES[board.size];
+  const board = state.boards.find(board => board.id === item.boardId);
   if (action === 'remove') { commit(() => { state.items = state.items.filter(entry => entry.id !== item.id); selectedId = null; }); toast('Accessory removed'); }
-  if (action === 'duplicate') { const [w, h] = footprint(item), id = nextId(); commit(() => { state.items.push({ ...item, id, x: clamp(item.x + 3, 0, bw - w), y: clamp(item.y + 3, 0, bh - h) }); selectedId = id; }); toast('Accessory copied'); }
-  if (action === 'rotate') { commit(() => { item.rotation = item.rotation === 90 ? 0 : 90; const [w, h] = footprint(item); item.x = clamp(item.x, 0, bw - w); item.y = clamp(item.y, 0, bh - h); }); }
+  if (action === 'duplicate') {
+    const spot = findSpot(board, state.items, item.type, item.rotation, [item.col + 2, item.row + 2]);
+    if (!spot) { toast('No free holes left for a copy on this board'); return; }
+    const id = nextId();
+    commit(() => { state.items.push({ ...item, id, col: spot[0], row: spot[1] }); selectedId = id; });
+    toast('Accessory copied');
+  }
+  if (action === 'rotate') {
+    const rotation = item.rotation === 90 ? 0 : 90;
+    const spot = placementIssue(board, item.type, rotation, item.col, item.row, usedHoles(state.items, board.id, item.id)) ? findSpot(board, state.items, item.type, rotation, [item.col, item.row], item.id) : [item.col, item.row];
+    if (!spot) { toast('There are no free holes to rotate this piece into'); return; }
+    commit(() => { item.rotation = rotation; item.col = spot[0]; item.row = spot[1]; });
+  }
 }
 function startDrag(event, type, id = null) {
   if (event.button !== 0 || event.target.closest('button')) return;
   event.preventDefault();
-  const a = accessory(type), item = id ? state.items.find(entry => entry.id === id) : null;
-  const [w, h] = item ? footprint(item) : [a.w, a.h], pxPerCm = boardArea.getBoundingClientRect().width / WORLD_W;
+  const item = id ? state.items.find(entry => entry.id === id) : null, rotation = item?.rotation || 0;
+  const [, , w, h] = geometry(type, rotation).rect, pxPerCm = boardArea.getBoundingClientRect().width / WORLD_W;
   const ghost = document.createElement('div'); ghost.className = 'drag-ghost';
   ghost.style.width = `${w * pxPerCm}px`; ghost.style.height = `${h * pxPerCm}px`;
-  ghost.innerHTML = art(type, item?.rotation === 90 ? 'style="transform:rotate(90deg)"' : '');
+  ghost.innerHTML = art(type, rotation === 90 ? 'style="transform:rotate(90deg)"' : '');
   document.body.appendChild(ghost);
-  dragging = { kind: 'piece', type, id, ghost, w, h, pxPerCm };
+  dragging = { kind: 'piece', type, id, rotation, ghost, w, h, pxPerCm };
   selectedId = id; if (item) selectedBoardId = item.boardId;
   renderBoards(); renderBoardSelector(); renderSelection(); moveDrag(event);
 }
@@ -241,11 +342,31 @@ function snapBoard(board, x, y) {
   if (valid.length && Math.hypot(valid[0][0] - x, valid[0][1] - y) <= 9) return { x: valid[0][0], y: valid[0][1], snapped: true };
   return { x: Math.round(x * 2) / 2, y: Math.round(y * 2) / 2, snapped: false };
 }
+function dropTarget(event, drag) {
+  for (const board of state.boards) {
+    const rect = boardLayer.querySelector(`[data-board-id="${board.id}"] .board-items`)?.getBoundingClientRect();
+    if (!rect || event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) continue;
+    const [bw, bh] = BOARD_SIZES[board.size];
+    const x = (event.clientX - rect.left) / rect.width * bw - drag.w / 2, y = (event.clientY - rect.top) / rect.height * bh - drag.h / 2;
+    const [col, row] = anchorFor(board.size, drag.type, drag.rotation, x, y);
+    return { board, col, row, issue: placementIssue(board, drag.type, drag.rotation, col, row, usedHoles(state.items, board.id, drag.id)) };
+  }
+  return null;
+}
+function showDropPreview(target, drag) {
+  boardLayer.querySelectorAll('.peg-preview').forEach(group => { group.innerHTML = ''; });
+  if (!target) return;
+  const group = boardLayer.querySelector(`[data-board-id="${target.board.id}"] .peg-preview`); if (!group) return;
+  const { holes, rect: [x, y, w, h] } = placement(drag.type, drag.rotation, target.col, target.row);
+  group.setAttribute('class', `peg-preview ${target.issue ? 'blocked' : 'open'}`);
+  group.innerHTML = `<rect class="preview-body" x="${x}" y="${y}" width="${w}" height="${h}" rx="0.6" vector-effect="non-scaling-stroke"/>${holes.map(([col, row]) => slot(col, row, 'class="preview-peg" vector-effect="non-scaling-stroke"')).join('')}`;
+}
 function moveDrag(event) {
   if (!dragging) return;
   if (dragging.kind === 'piece') {
     dragging.ghost.style.left = `${event.clientX - dragging.w * dragging.pxPerCm / 2}px`;
     dragging.ghost.style.top = `${event.clientY - dragging.h * dragging.pxPerCm / 2}px`;
+    showDropPreview(dropTarget(event, dragging), dragging);
     return;
   }
   const drag = dragging, board = state.boards.find(board => board.id === drag.id);
@@ -268,28 +389,28 @@ function endDrag(event) {
     return;
   }
   drag.ghost.remove();
-  const target = state.boards.find(board => { const element = boardLayer.querySelector(`[data-board-id="${board.id}"] .board`); const rect = element?.getBoundingClientRect(); return rect && event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom; });
+  const target = dropTarget(event, drag);
   if (!target) { render(); return; }
-  const element = boardLayer.querySelector(`[data-board-id="${target.id}"] .board`), rect = element.getBoundingClientRect();
-  const [bw, bh] = BOARD_SIZES[target.size];
-  const x = Math.round(clamp((event.clientX - rect.left) / rect.width * bw - drag.w / 2, 0, bw - drag.w) * 2) / 2;
-  const y = Math.round(clamp((event.clientY - rect.top) / rect.height * bh - drag.h / 2, 0, bh - drag.h) * 2) / 2;
-  if (drag.id) { const item = state.items.find(entry => entry.id === drag.id); if (item && (item.x !== x || item.y !== y || item.boardId !== target.id)) commit(() => { item.x = x; item.y = y; item.boardId = target.id; selectedBoardId = target.id; }); else render(); }
-  else addAccessory(drag.type, [x, y], target.id);
+  if (target.issue) { render(); toast(ISSUE_MESSAGES[target.issue]); return; }
+  if (drag.id) { const item = state.items.find(entry => entry.id === drag.id); if (item && (item.col !== target.col || item.row !== target.row || item.boardId !== target.board.id)) commit(() => { item.col = target.col; item.row = target.row; item.boardId = target.board.id; selectedBoardId = target.board.id; }); else render(); }
+  else addAccessory(drag.type, [target.col, target.row], target.board.id);
 }
 function downloadLayout() {
   const scale = 10, pad = 45, W = WORLD_W * scale + pad * 2, H = WORLD_H * scale + pad * 2;
   const palette = { white: ['#fafaf8', '#e7e8e4', '#b6c0ba'], black: ['#33383b', '#252d30', '#131b1e'], wood: ['#c9a87f', '#b38c64', '#785c40'] };
-  const patterns = state.boards.map((board, i) => `<pattern id="holes${i}" width="38" height="38" patternUnits="userSpaceOnUse"><rect x="7" y="3" width="6" height="18" rx="3" fill="${palette[board.color][2]}"/><rect x="25" y="22" width="6" height="18" rx="3" fill="${palette[board.color][2]}"/></pattern>`).join('');
-  const boards = state.boards.map((board, i) => {
+  const scaledSlot = (col, row, fill) => { const [x, y] = holePoint(col, row); return `<rect x="${(x - 0.25) * scale}" y="${(y - 0.75) * scale}" width="${0.5 * scale}" height="${1.5 * scale}" rx="${0.25 * scale}" fill="${fill}"/>`; };
+  const boards = state.boards.map(board => {
     const [bw, bh] = BOARD_SIZES[board.size], x = pad + board.x * scale, y = pad + board.y * scale, color = palette[board.color];
-    const items = state.items.filter(item => item.boardId === board.id).map(item => {
-      const a = accessory(item.type), ix = item.x * scale, iy = item.y * scale, iw = a.w * scale, ih = a.h * scale;
-      return item.rotation === 90 ? `<g transform="translate(${ix + ih} ${iy}) rotate(90)">${art(item.type, `x="0" y="0" width="${iw}" height="${ih}"`)}</g>` : art(item.type, `x="${ix}" y="${iy}" width="${iw}" height="${ih}"`);
+    const boardItems = state.items.filter(item => item.boardId === board.id);
+    const holes = allHoles(board.size).map(([col, row]) => scaledSlot(col, row, color[2])).join('');
+    const items = boardItems.map(item => {
+      const a = accessory(item.type), [rx, ry, rw] = itemPlacement(item).rect, ix = rx * scale, iy = ry * scale, iw = a.w * scale, ih = a.h * scale;
+      return item.rotation === 90 ? `<g transform="translate(${ix + rw * scale} ${iy}) rotate(90)">${art(item.type, `x="0" y="0" width="${iw}" height="${ih}"`)}</g>` : art(item.type, `x="${ix}" y="${iy}" width="${iw}" height="${ih}"`);
     }).join('');
-    return `<g transform="translate(${x} ${y})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="url(#holes${i})"/>${items}</g>`;
+    const pegs = boardItems.filter(item => item.type !== 'wall-mount').map(item => itemPlacement(item).holes.map(([col, row]) => scaledSlot(col, row, '#e2b33c')).join('')).join('');
+    return `<g transform="translate(${x} ${y})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/>${holes}${items}${pegs}</g>`;
   }).join('');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${patterns}</defs><rect width="100%" height="100%" fill="#e9eeea"/>${boards}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#e9eeea"/>${boards}</svg>`;
   const image = new Image();
   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
   image.onload = () => {
@@ -353,7 +474,17 @@ document.addEventListener('keydown', event => {
   if (!selectedId) return;
   if (event.key === 'Escape') { selectedId = null; render(); return; }
   if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); selectedAction('remove'); return; }
-  if (arrow) { event.preventDefault(); const item = state.items.find(item => item.id === selectedId); if (!item) return; const board = state.boards.find(board => board.id === item.boardId), [bw, bh] = BOARD_SIZES[board.size], [w, h] = footprint(item), step = event.shiftKey ? 5 : 1; commit(() => { item.x = clamp(item.x + arrow[0] * step, 0, bw - w); item.y = clamp(item.y + arrow[1] * step, 0, bh - h); }); boardLayer.querySelector(`[data-id="${selectedId}"]`)?.focus(); }
+  if (arrow) { event.preventDefault(); nudgeSelected(arrow, event.shiftKey ? 3 : 1); }
 });
+function nudgeSelected([dx, dy], holes) {
+  const item = state.items.find(item => item.id === selectedId); if (!item) return;
+  const board = state.boards.find(board => board.id === item.boardId), used = usedHoles(state.items, board.id, item.id);
+  for (let n = holes; n < 60; n++) {
+    const col = item.col + dx * 2 * n, row = item.row + dy * 2 * n, issue = placementIssue(board, item.type, item.rotation, col, row, used);
+    if (issue === 'edge') break;
+    if (!issue) { commit(() => { item.col = col; item.row = row; }); boardLayer.querySelector(`[data-id="${CSS.escape(selectedId)}"]`)?.focus(); return; }
+  }
+  toast('No free holes in that direction');
+}
 window.addEventListener('hashchange', () => { if (location.hash.startsWith('#layout=')) { const shared = decodeState(location.hash.slice(8)); if (shared) { state = shared; selectedId = null; selectedBoardId = state.boards[0].id; undoStack = []; redoStack = []; save(); render(); toast('Shared layout opened'); } } });
 renderCatalog(); render(); save();

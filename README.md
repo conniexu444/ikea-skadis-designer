@@ -6,7 +6,9 @@ An unofficial, browser-based planner for arranging two IKEA SKÅDIS pegboards an
 
 - Drag either board by its **Move board** handle. Boards snap edge-to-edge when brought close together.
 - Choose each board's size (36 × 56, 56 × 56, or 76 × 56 cm) and color independently.
-- Drag accessories onto either board, move them between boards, or use the **+** buttons to add them.
+- Accessories snap onto the board's SKÅDIS hole grid (holes 2 cm apart diagonally, 4 cm apart in a row or column). Each piece uses one or more holes, and a hole can only hold one thing.
+- Place **Wall mounts** on the holes that hold each board to the wall; those holes are then unavailable for accessories.
+- Drag accessories onto either board, move them between boards, or use the **+** buttons to add them. While dragging, the target holes turn blue when free and red when taken.
 - Rotate, duplicate, remove, and nudge accessories; use Undo and Redo while editing.
 - Save layouts automatically in the browser, copy a layout link, and download a PNG.
 
