@@ -16,7 +16,6 @@
   --canvas: #ffffff;
   --radius: 10px;
   --banner: #ff5fae;
-  --save: #5b5f64;
   --display: 'Jersey 15', var(--font);
   --font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --shadow-sm: 0 1px 2px #1d232b14;
@@ -64,8 +63,8 @@ svg { flex: none; }
 .button:hover { background: var(--surface-2); border-color: #c5bdae; }
 .button-primary { background: var(--ink); border-color: var(--ink); color: #fff; }
 .button-primary:hover { background: #333b45; border-color: #333b45; }
-.button-save { background: var(--save); border-color: var(--save); }
-.button-save:hover { background: #4a4e53; border-color: #4a4e53; }
+.button-save { background: var(--banner); border-color: var(--banner); color: #fff; }
+.button-save:hover { background: #f0479c; border-color: #f0479c; }
 .text-button { border: 0; background: none; padding: 4px 2px; font-weight: 600; font-size: 13px; color: var(--accent); }
 .text-button:hover:not(:disabled) { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
 .text-button.muted { color: var(--muted); }
