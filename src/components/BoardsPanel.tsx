@@ -34,7 +34,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
           return (
             <button key={board.id} className={`board-select ${active ? 'active' : ''}`} type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
               <strong>Board {i + 1}</strong>
-              <small>{board.size.replace('x', ' × ')} cm · {board.color}</small>
+              <small>{board.size.replace('x', ' × ')} cm</small>
             </button>
           )
         })}
