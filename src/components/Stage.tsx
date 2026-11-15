@@ -16,8 +16,6 @@ interface Props {
   startBoardDrag: ReturnType<typeof useDrag>['startBoardDrag']
 }
 
-const GRID_CM = 4
-
 export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startBoardDrag }: Props) {
   const { layout, selectedItem } = planner
   const pan = useRef<{ id: number; x: number; y: number } | null>(null)
@@ -54,7 +52,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
       </div>
       <div
         ref={viewportRef} className={`board-scroll ${panning ? 'panning' : ''}`}
-        style={{ backgroundSize: `${GRID_CM * scale}px ${GRID_CM * scale}px`, backgroundPosition: `${x}px ${y}px` }}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
       >
         {camera.ready && (

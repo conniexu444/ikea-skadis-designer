@@ -98,7 +98,7 @@ svg { flex: none; }
 .stage { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--wall); background-image: radial-gradient(ellipse at 50% 0%, #f6f3ee 0%, transparent 70%), linear-gradient(#0000 0 0); }
 .stage-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px 0; }
 .stage-summary { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; background: #ffffffb3; backdrop-filter: blur(6px); color: var(--ink-2); font-size: 12px; font-weight: 600; box-shadow: var(--shadow-sm); }
-.board-scroll { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; background-image: radial-gradient(circle, #b9b2a5 1px, transparent 1.2px); }
+.board-scroll { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; }
 .board-scroll.panning { cursor: grabbing; }
 .board-scroll .board-wrap { cursor: default; }
 .board-scroll .board { cursor: grab; }
