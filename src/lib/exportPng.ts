@@ -36,7 +36,7 @@ export function layoutSvg(layout: Layout, scale = 10, pad = 45) {
       .map(item => itemPlacement(item, board.size).holes.map(([col, row]) => slot(board.size, col, row, '#e2b33c')).join('')).join('')
     return `<g transform="translate(${pad + (board.x - left) * scale} ${pad + (board.y - top) * scale})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/>${holes}${items}${pegs}</g>`
   }).join('')
-  return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#fcf7ec"/>${boards}</svg>`, width: W, height: H }
+  return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#ffffff"/>${boards}</svg>`, width: W, height: H }
 }
 
 export function fileName(layout: Layout) {
