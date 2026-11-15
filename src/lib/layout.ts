@@ -100,17 +100,32 @@ export function readInitialLayout(): Layout {
 }
 
 /** Drops a dragged board at (x, y), snapping edge to edge when it is within 9 cm of the other board. */
+const SNAP_DISTANCE = 9, ALIGN_DISTANCE = 4
+
+/**
+ * Where a dragged board lands. Within SNAP_DISTANCE cm of the other board it snaps edge to edge,
+ * sliding freely along that edge but lining up with the other board's top/bottom (or sides) when close.
+ */
 export function snapBoard(boards: Board[], board: Board, x: number, y: number) {
   const [w, h] = BOARD_SIZES[board.size], other = boards.find(entry => entry.id !== board.id)
   x = clamp(x, 0, WORLD_W - w); y = clamp(y, 0, WORLD_H - h)
-  const free = { x: Math.round(x * 2) / 2, y: Math.round(y * 2) / 2, snapped: false }
+  const half = (n: number) => Math.round(n * 2) / 2
+  const free = { x: half(x), y: half(y), snapped: false }
   if (!other) return free
   const [ow, oh] = BOARD_SIZES[other.size]
-  const points = [[other.x + ow, other.y], [other.x - w, other.y], [other.x, other.y + oh], [other.x, other.y - h]]
-  const valid = points.filter(([cx, cy]) => cx >= 0 && cy >= 0 && cx + w <= WORLD_W && cy + h <= WORLD_H)
-  valid.sort((a, b) => Math.hypot(a[0] - x, a[1] - y) - Math.hypot(b[0] - x, b[1] - y))
-  if (valid.length && Math.hypot(valid[0][0] - x, valid[0][1] - y) <= 9) return { x: valid[0][0], y: valid[0][1], snapped: true }
-  return free
+  const align = (value: number, edges: number[]) => edges.find(edge => Math.abs(edge - value) <= ALIGN_DISTANCE) ?? half(value)
+  const candidates: { x: number; y: number }[] = []
+  if (y < other.y + oh && y + h > other.y) {
+    for (const cx of [other.x + ow, other.x - w]) candidates.push({ x: cx, y: align(y, [other.y, other.y + oh - h]) })
+  }
+  if (x < other.x + ow && x + w > other.x) {
+    for (const cy of [other.y + oh, other.y - h]) candidates.push({ x: align(x, [other.x, other.x + ow - w]), y: cy })
+  }
+  const best = candidates
+    .filter(c => c.x >= 0 && c.y >= 0 && c.x + w <= WORLD_W && c.y + h <= WORLD_H && !boardRectOverlaps({ ...board, ...c }, other))
+    .map(c => ({ ...c, distance: Math.hypot(c.x - x, c.y - y) }))
+    .sort((a, b) => a.distance - b.distance)[0]
+  return best && best.distance <= SNAP_DISTANCE ? { x: best.x, y: best.y, snapped: true } : free
 }
 
 /**

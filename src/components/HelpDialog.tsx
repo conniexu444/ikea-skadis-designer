@@ -16,7 +16,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
       <h2>Plan it before you drill.</h2>
       <p className="dialog-lead">SKÅDIS Studio lays out real SKÅDIS hole grids so you can see exactly what fits.</p>
       <ol>
-        <li><b>Arrange your boards.</b> Drag a board by its handle; edges snap together when they get close.</li>
+        <li><b>Arrange your boards.</b> Drag a board anywhere a piece isn’t; edges snap together when they get close.</li>
         <li><b>Mount them.</b> Put wall mounts on the holes that will hold each board to the wall.</li>
         <li><b>Add accessories.</b> Drag pieces onto the board or press +. Pieces snap to holes, and each hole holds one thing.</li>
         <li><b>Fine-tune.</b> Select a piece to rotate, copy, or remove it. Arrow keys move it hole by hole.</li>

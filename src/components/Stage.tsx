@@ -63,7 +63,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
                 selected={board.id === planner.selectedBoardId} selectedId={planner.selectedId} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
-                onBoardDown={planner.selectBoard}
               />
             ))}
           </div>

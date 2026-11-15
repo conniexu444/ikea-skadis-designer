@@ -178,13 +178,12 @@ export function usePlanner() {
     notify('Board removed — Undo can restore it')
   }
   /** Moves a board unless it would overlap the other one. Returns whether it moved. */
-  function moveBoard(id: string, x: number, y: number, announceSnap = false) {
+  function moveBoard(id: string, x: number, y: number, snapped = false) {
     const board = layout.boards.find(entry => entry.id === id)!, other = layout.boards.find(entry => entry.id !== id)
     if (other && boardRectOverlaps({ ...board, x, y }, other)) return false
     if (board.x === x && board.y === y) return true
     commit(draft => { Object.assign(draft.boards.find(entry => entry.id === id)!, { x, y }) })
-    const w = BOARD_SIZES[board.size][0]
-    if (announceSnap && other && (x + w === other.x || other.x + BOARD_SIZES[other.size][0] === x)) notify('Boards snapped together')
+    if (snapped) notify('Boards snapped together')
     return true
   }
 
