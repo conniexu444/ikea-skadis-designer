@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
 import { holeStats } from '../lib/holes'
 import { MAX_BOARDS } from '../lib/layout'
@@ -5,18 +6,29 @@ import type { Planner } from '../hooks/usePlanner'
 
 const SIZE_GRAPHIC: Record<BoardSize, string> = { '36x56': 'narrow', '56x56': 'square', '76x56': 'wide' }
 const label = (text: string) => text[0].toUpperCase() + text.slice(1)
+const COLLAPSED_KEY = 'pegboard-boards-collapsed'
 
 export function BoardsPanel({ planner }: { planner: Planner }) {
   const { layout, selectedBoardId, currentBoard } = planner
+  const [open, setOpen] = useState(() => localStorage.getItem(COLLAPSED_KEY) !== '1')
+  function toggle() {
+    setOpen(!open)
+    try { localStorage.setItem(COLLAPSED_KEY, open ? '1' : '0') } catch { /* storage unavailable */ }
+  }
   return (
-    <section className="panel boards-panel">
+    <section className={`panel boards-panel ${open ? '' : 'collapsed'}`}>
       <div className="panel-head">
-        <h2>Boards</h2>
+        <h2>
+          <button type="button" className="panel-toggle" aria-expanded={open} aria-controls="boards-panel-body" onClick={toggle}>
+            <span className="chevron" aria-hidden="true" />Boards
+          </button>
+        </h2>
         <div className="board-actions">
           <button type="button" className="text-button" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add</button>
           <button type="button" className="text-button muted" disabled={layout.boards.length <= 1} onClick={planner.removeBoard}>Remove</button>
         </div>
       </div>
+      <div id="boards-panel-body" className="panel-body" hidden={!open}>
       <div className="board-selector" role="group" aria-label="Choose a board">
         {layout.boards.map((board, i) => {
           const { used, total } = holeStats(layout.items, board), active = board.id === selectedBoardId
@@ -49,6 +61,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
             </button>
           ))}
         </div>
+      </div>
       </div>
     </section>
   )
