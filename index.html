@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ef">
+  <meta name="description" content="Arrange two SKÅDIS boards and accessories with drag and drop, then save your layout.">
+  <title>SKÅDIS Studio — Plan your pegboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="SKÅDIS Studio home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>SKÅDIS <b>STUDIO</b></span></a>
+      <div class="topbar-right"><span class="topbar-note">A space for everything.</span><button id="helpButton" class="text-button" type="button">How it works <span aria-hidden="true">↗</span></button></div>
+    </header>
+
+    <main id="top">
+      <section class="intro">
+        <div><p class="eyebrow"><span class="eyebrow-line"></span> YOUR SPACE, YOUR SETUP</p><h1>Make room for<br><em>what matters.</em></h1></div>
+        <div class="intro-right"><p>Try a layout before you hang a thing. Arrange your boards together, then move the accessories until everything feels right.</p><div class="intro-actions"><span class="step-dot">01</span> Arrange your boards <span class="arrow-line" aria-hidden="true">→</span></div></div>
+      </section>
+
+      <section class="planner" aria-label="SKÅDIS pegboard planner">
+        <aside class="catalog panel" aria-label="Accessory catalog">
+          <div class="panel-heading"><div><span class="section-kicker">01 / BUILD</span><h2>Accessories</h2></div><span class="heading-count" id="catalogCount">8 pieces</span></div>
+          <p class="panel-intro">Drag onto the board or tap <strong>+</strong> to add.</p>
+          <div class="search-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.7" cy="10.7" r="6.2"/><path d="m15.3 15.3 5 5"/></svg><input id="searchInput" type="search" placeholder="Find an accessory" aria-label="Find an accessory"></div>
+          <div class="filter-row" role="group" aria-label="Filter accessories"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="storage" type="button">Storage</button><button class="filter" data-filter="display" type="button">Display</button><button class="filter" data-filter="small" type="button">Small</button></div>
+          <div id="catalogList" class="catalog-list"></div>
+          <div class="catalog-foot"><div class="lightbulb">✦</div><p><strong>Tip:</strong> Start with the larger pieces, then fill in the little gaps.</p></div>
+        </aside>
+
+        <div class="workspace">
+          <div class="workspace-top"><div><span class="section-kicker">02 / ARRANGE</span><h2>Your canvas <span class="canvas-sparkle" aria-hidden="true">✳</span></h2></div><div class="workspace-top-actions"><button id="undoButton" type="button" class="icon-button" title="Undo" aria-label="Undo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6 4 11l5 5M4 11h10a6 6 0 0 1 0 12"/></svg></button><button id="redoButton" type="button" class="icon-button" title="Redo" aria-label="Redo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6 5 5-5 5m5-5H10a6 6 0 0 0 0 12"/></svg></button><span class="action-divider"></span><button id="resetButton" type="button" class="text-button quiet">Clear accessories</button></div></div>
+          <div class="canvas-stage"><div class="stage-glow"></div><div class="stage-label stage-label-left">YOUR BOARD LAYOUT</div><div class="stage-label stage-label-right">MAKE IT YOURS ↗</div><div class="board-scroll"><div id="boardArea" class="board-area" role="group" aria-label="Board arrangement"><div id="boardLayer"></div></div></div><div class="stage-ruler"><span id="sizeLabel">2 boards</span><span>DRAG A BOARD HANDLE TO MOVE IT</span></div></div>
+          <div class="canvas-bottom"><span><span class="status-dot"></span><span id="saveStatus">Your layout is saved in this browser</span></span><span class="canvas-tip">Boards snap together when brought close <span aria-hidden="true">↗</span></span></div>
+        </div>
+
+        <aside class="settings panel" aria-label="Board settings and selected accessory">
+          <div class="panel-heading"><div><span class="section-kicker">03 / CUSTOMIZE</span><h2>The details</h2></div></div>
+          <div class="settings-section"><div class="field-heading"><label for="projectName">Layout name</label></div><input id="projectName" class="name-input" type="text" maxlength="60" value="My perfect setup" aria-label="Layout name"></div>
+          <div class="settings-section board-settings"><div class="field-heading"><span>Your boards</span><span class="muted-mini">SELECT TO EDIT</span></div><div id="boardSelector" class="board-selector" role="group" aria-label="Choose a board"></div><div class="board-actions"><button id="addBoardButton" type="button">+ Add board</button><button id="removeBoardButton" type="button">Remove selected</button></div></div>
+          <div class="settings-section"><div class="field-heading"><span>Selected board size</span><span class="muted-mini">CM</span></div><div class="size-options" role="group" aria-label="Selected board size"><button class="size-choice" data-size="36x56" type="button"><span class="size-graphic narrow"></span><span>36 × 56</span></button><button class="size-choice active" data-size="56x56" type="button"><span class="size-graphic square"></span><span>56 × 56</span></button><button class="size-choice" data-size="76x56" type="button"><span class="size-graphic wide"></span><span>76 × 56</span></button></div></div>
+          <div class="settings-section"><div class="field-heading"><span>Selected board color</span></div><div class="color-options" role="group" aria-label="Selected board color"><button class="color-choice active" data-color="white" type="button" aria-label="White board" title="White"><span class="swatch white"></span><span>White</span></button><button class="color-choice" data-color="black" type="button" aria-label="Black board" title="Black"><span class="swatch black"></span><span>Black</span></button><button class="color-choice" data-color="wood" type="button" aria-label="Wood board" title="Wood"><span class="swatch wood"></span><span>Wood</span></button></div></div>
+          <div id="selectionPanel" class="selection-panel" hidden></div>
+          <div class="parts-section"><div class="parts-title"><h3>In your setup</h3><span id="partTotal" class="part-total">0 items</span></div><div id="partsList" class="parts-list"><p class="empty-parts">Your board is a blank canvas.</p></div></div>
+          <div class="export-actions"><button id="downloadButton" type="button" class="primary-button"><span>Download your layout</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></button><button id="shareButton" type="button" class="secondary-button">Copy shareable link <span aria-hidden="true">↗</span></button></div>
+        </aside>
+      </section>
+      <div class="disclaimer"><span class="info-icon">i</span><p>This is a visual planning tool. Accessory illustrations and spacing are approximate; check product dimensions and mounting instructions before purchasing. <a href="https://www.ikea.com/us/en/search/?q=SK%C3%85DIS" target="_blank" rel="noopener noreferrer">Explore SKÅDIS at IKEA ↗</a></p></div>
+    </main>
+    <footer><span>SKÅDIS STUDIO</span><span>Made for ideas that deserve a place.</span><span>Unofficial planning tool · Not affiliated with IKEA</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="helpDialog" class="help-dialog"><button id="closeHelp" class="dialog-close" type="button" aria-label="Close">×</button><span class="section-kicker">A QUICK GUIDE</span><h2>Make it yours.</h2><ol><li><b>Arrange your boards.</b> Drag each board by its Move handle. Bring their edges close to snap them together.</li><li><b>Choose a board.</b> Select either board on the right to change its size or color.</li><li><b>Add accessories.</b> Drag from the catalog onto either board or use the plus buttons.</li><li><b>Fine-tune your setup.</b> Drag items to move them between boards. Select one to rotate, duplicate, or remove it.</li><li><b>Keep your idea.</b> Your layout saves in this browser. Download an image or copy a link to share it.</li></ol><button id="startPlanning" class="primary-button" type="button">Start planning <span aria-hidden="true">→</span></button></dialog>
+</body>
+</html>
