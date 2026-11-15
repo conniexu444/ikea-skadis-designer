@@ -5,8 +5,17 @@ import { allHoles, holePoint, itemPlacement } from './holes'
 const PALETTE = { white: ['#fafaf8', '#e7e8e4', '#b6c0ba'], black: ['#33383b', '#252d30', '#131b1e'], wood: ['#c9a87f', '#b38c64', '#785c40'] }
 
 export function layoutSvg(layout: Layout, scale = 10, pad = 45) {
-  const left = Math.min(...layout.boards.map(board => board.x)), top = Math.min(...layout.boards.map(board => board.y))
-  const right = Math.max(...layout.boards.map(board => board.x + BOARD_SIZES[board.size][0])), bottom = Math.max(...layout.boards.map(board => board.y + BOARD_SIZES[board.size][1]))
+  const extents = [
+    ...layout.boards.map(board => [board.x, board.y, BOARD_SIZES[board.size][0], BOARD_SIZES[board.size][1]]),
+    ...layout.items.flatMap(item => {
+      const board = layout.boards.find(entry => entry.id === item.boardId)
+      if (!board) return []
+      const [x, y, w, h] = itemPlacement(item, board.size).rect
+      return [[board.x + x, board.y + y, w, h]]
+    }),
+  ]
+  const left = Math.min(...extents.map(([x]) => x)), top = Math.min(...extents.map(([, y]) => y))
+  const right = Math.max(...extents.map(([x, , w]) => x + w)), bottom = Math.max(...extents.map(([, y, , h]) => y + h))
   const W = (right - left) * scale + pad * 2, H = (bottom - top) * scale + pad * 2
   const slot = (size: Parameters<typeof holePoint>[0], col: number, row: number, fill: string) => {
     const [x, y] = holePoint(size, col, row)

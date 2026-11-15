@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Board, Item } from './catalog'
-import { allHoles, findSpot, holeExists, placementIssue, usedHoles } from './holes'
+import { allHoles, findSpot, holeExists, placement, placementIssue, usedHoles } from './holes'
 
 const rowCounts = (size: Board['size']) => {
   const rows = new Map<number, number>()
@@ -42,9 +42,18 @@ describe('hole occupancy', () => {
     expect(placementIssue(board, 'wall-mount', 0, 4, 4, usedHoles([mount], board, 'm'))).toBeNull()
   })
 
-  it('refuses pieces that would hang off the board or miss a hole', () => {
-    expect(placementIssue(board, 'shelf', 0, 20, 4, new Set())).toBe('edge')
+  it('lets pieces hang off the board but refuses pegs that miss a hole', () => {
+    const hanging = allHoles(board.size).filter(([col, row]) => {
+      const [x, y, w, h] = placement(board.size, 'shelf', 0, col, row).rect
+      return !placementIssue(board, 'shelf', 0, col, row, new Set()) && (x < 0 || y < 0 || x + w > 56 || y + h > 56)
+    })
+    expect(hanging.length).toBeGreaterThan(0)
     expect(placementIssue(board, 'hook', 0, 1, 0, new Set())).toBe('edge')
+  })
+
+  it('prefers spots fully on the board when placing automatically', () => {
+    const [x, y, w, h] = placement(board.size, 'shelf', 0, ...findSpot(board, [], 'shelf', 0, [20, 4])!).rect
+    expect(x >= 0 && y >= 0 && x + w <= 56 && y + h <= 56).toBe(true)
   })
 
   it('finds a free spot that never reuses a hole', () => {

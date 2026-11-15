@@ -18,7 +18,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
       <ol>
         <li><b>Arrange your boards.</b> Drag a board anywhere a piece isn’t; edges snap together when they get close.</li>
         <li><b>Mount them.</b> Put wall mounts on the holes that will hold each board to the wall.</li>
-        <li><b>Add accessories.</b> Drag pieces onto the board or press +. Pieces snap to holes, and each hole holds one thing.</li>
+        <li><b>Add accessories.</b> Drag pieces onto the board or press +. Pieces snap to holes, each hole holds one thing, and pieces can hang past the board edge.</li>
         <li><b>Fine-tune.</b> Select a piece to rotate, copy, or remove it. Arrow keys move it hole by hole. Ctrl/⌘+C and Ctrl/⌘+V copy and paste a selected piece or board.</li>
         <li><b>Look closer.</b> Pinch the trackpad to zoom, and scroll or drag the canvas to move around.</li>
         <li><b>Keep it.</b> Your layout saves in this browser. Copy a link or download a PNG to share it.</li>

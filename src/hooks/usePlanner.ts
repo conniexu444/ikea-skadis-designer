@@ -15,7 +15,7 @@ export function usePlanner() {
   const [firstVisit] = useState(() => !localStorage.getItem(STORAGE_KEY) && !location.hash.startsWith('#layout='))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [chosenBoardId, setChosenBoardId] = useState<string | null>(null)
-  const [boardHighlighted, setBoardHighlighted] = useState(true)
+  const [boardHighlighted, setBoardHighlighted] = useState(false)
   const [clipboard, setClipboard] = useState<Clipboard | null>(null)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)

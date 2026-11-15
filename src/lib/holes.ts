@@ -74,11 +74,16 @@ export function usedHoles(items: Item[], board: Board, ignoreId: string | null =
   return used
 }
 
+/** A piece fits when every peg is on a free hole; its body may hang past the board edge. */
 export function placementIssue(board: Board, type: string, rotation: Rotation, col: number, row: number, used: Set<string>): PlacementIssue | null {
-  const { holes, rect } = placement(board.size, type, rotation, col, row), [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6
-  const fits = holes.every(([c, r]) => holeExists(board.size, c, r)) && rect[0] >= -eps && rect[1] >= -eps && rect[0] + rect[2] <= bw + eps && rect[1] + rect[3] <= bh + eps
-  if (!fits) return 'edge'
+  const { holes } = placement(board.size, type, rotation, col, row)
+  if (!holes.every(([c, r]) => holeExists(board.size, c, r))) return 'edge'
   return holes.some(([c, r]) => used.has(holeKey(c, r))) ? 'taken' : null
+}
+
+function onBoard(board: Board, type: string, rotation: Rotation, col: number, row: number) {
+  const [x, y, w, h] = placement(board.size, type, rotation, col, row).rect, [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6
+  return x >= -eps && y >= -eps && x + w <= bw + eps && y + h <= bh + eps
 }
 
 export function nearestHole(size: BoardSize, x: number, y: number): Hole {
@@ -95,17 +100,24 @@ export function nearestHole(size: BoardSize, x: number, y: number): Hole {
   return best ?? [0, 0]
 }
 
-/** The anchor hole for a piece whose top-left corner is at (x, y) cm. */
-export function anchorFor(size: BoardSize, type: string, rotation: Rotation, x: number, y: number) {
-  const { rect } = geometry(type, rotation)
-  return nearestHole(size, x - rect[0], y - rect[1])
+/** The anchor hole closest to a piece whose top-left corner is at (x, y) cm, among those where every peg lands on a hole. */
+export function anchorFor(size: BoardSize, type: string, rotation: Rotation, x: number, y: number): Hole {
+  const { rect } = geometry(type, rotation), [tx, ty] = [x - rect[0], y - rect[1]]
+  let best: Hole | null = null, bestDistance = Infinity
+  for (const [col, row] of allHoles(size)) {
+    const [hx, hy] = holePoint(size, col, row), distance = Math.hypot(hx - tx, hy - ty)
+    if (distance < bestDistance && placement(size, type, rotation, col, row).holes.every(([c, r]) => holeExists(size, c, r))) { best = [col, row]; bestDistance = distance }
+  }
+  return best ?? nearestHole(size, tx, ty)
 }
 
 export function findSpot(board: Board, items: Item[], type: string, rotation: Rotation, near: Hole | null = null, ignoreId: string | null = null): Hole | null {
   const used = usedHoles(items, board, ignoreId)
   let holes = allHoles(board.size)
   if (near) holes = [...holes].sort((a, b) => Math.hypot(a[0] - near[0], (a[1] - near[1]) * 1.01) - Math.hypot(b[0] - near[0], (b[1] - near[1]) * 1.01))
-  return holes.find(([col, row]) => !placementIssue(board, type, rotation, col, row, used)) ?? null
+  const free = holes.filter(([col, row]) => !placementIssue(board, type, rotation, col, row, used))
+  // Automatic placement keeps pieces on the board when it can; only dragging deliberately hangs them off.
+  return free.find(([col, row]) => onBoard(board, type, rotation, col, row)) ?? free[0] ?? null
 }
 
 export function holeStats(items: Item[], board: Board) {
