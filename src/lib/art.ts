@@ -13,7 +13,7 @@ export const ART: Record<AccessoryId, string> = {
   clip: `<path d="M50 12v21" stroke="${dark}" stroke-width="5" stroke-linecap="round"/><path d="M33 37h34l6 27-23 22-23-22z" fill="${white}" stroke="${edge}" stroke-width="3"/><path d="M36 45h28M40 55h20" stroke="${shade}" stroke-width="3"/><circle cx="50" cy="37" r="8" fill="${shade}" stroke="${edge}" stroke-width="2"/>`,
   'letter-holder': `<path d="M12 24h76v62H12z" fill="${white}" stroke="${edge}" stroke-width="3"/><path d="M12 55 50 73l38-18" fill="none" stroke="${edge}" stroke-width="3"/><path d="M20 32h60M26 40h48" stroke="${shade}" stroke-width="3"/><path d="M22 15v9M78 15v9" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`,
   elastic: `<circle cx="15" cy="19" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="85" cy="19" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="15" cy="81" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><circle cx="85" cy="81" r="6" fill="${white}" stroke="${dark}" stroke-width="3"/><path d="M15 19 85 81M85 19 15 81" fill="none" stroke="#8d9f9a" stroke-width="7" stroke-linecap="round"/><path d="M15 19 85 81M85 19 15 81" fill="none" stroke="${shade}" stroke-width="2"/>`,
-  'wall-mount': `<circle cx="50" cy="50" r="38" fill="${white}" stroke="${edge}" stroke-width="5"/><circle cx="50" cy="50" r="27" fill="${shade}"/><path d="M50 35v30" stroke="${dark}" stroke-width="8" stroke-linecap="round"/>`,
+  'wall-mount': `<circle cx="50" cy="50" r="38" fill="#4b5053" stroke="#33373a" stroke-width="5"/><circle cx="50" cy="50" r="27" fill="#575c60"/><path d="M50 35v30" stroke="#222628" stroke-width="8" stroke-linecap="round"/>`,
 }
 
 export const artSvg = (type: AccessoryId, attributes = '') =>
