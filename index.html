@@ -33,35 +33,8 @@
     </header>
 
     <main class="workbench">
-      <aside class="sidebar catalog" aria-label="Accessory catalog">
-        <div class="sidebar-head">
-          <h2>Accessories</h2>
-          <span class="count" id="catalogCount">9 pieces</span>
-        </div>
-        <div class="search-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="searchInput" type="search" placeholder="Search accessories" aria-label="Search accessories"></div>
-        <div class="filter-row" role="group" aria-label="Filter accessories"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="mounting" type="button">Mounts</button><button class="filter" data-filter="storage" type="button">Storage</button><button class="filter" data-filter="display" type="button">Display</button><button class="filter" data-filter="small" type="button">Small</button></div>
-        <div id="catalogList" class="catalog-list"></div>
-        <p class="sidebar-note">Drag a piece onto a board, or press <kbd>+</kbd> to drop it in the first free spot.</p>
-      </aside>
-
-      <section class="stage" aria-label="Board arrangement">
-        <div class="stage-bar">
-          <span id="sizeLabel" class="stage-summary">2 boards</span>
-          <button id="resetButton" type="button" class="text-button">Clear accessories</button>
-        </div>
-        <div class="board-scroll"><div id="boardArea" class="board-area" role="group" aria-label="Boards"><div id="boardLayer"></div></div></div>
-        <div class="stage-hints" aria-hidden="true">
-          <span><b>Drag</b> pieces onto holes</span>
-          <span><b>Each hole</b> holds one thing</span>
-          <span><kbd>←</kbd><kbd>→</kbd> move by a hole</span>
-          <span><kbd>Del</kbd> remove</span>
-        </div>
-      </section>
-
-      <aside class="sidebar inspector" aria-label="Selection and board settings">
-        <section id="selectionPanel" class="panel selection-panel"></section>
-
-        <section class="panel">
+      <aside class="sidebar" aria-label="Boards and accessories">
+        <section class="panel boards-panel">
           <div class="panel-head"><h2>Boards</h2><div class="board-actions"><button id="addBoardButton" type="button" class="text-button">+ Add</button><button id="removeBoardButton" type="button" class="text-button muted">Remove</button></div></div>
           <div id="boardSelector" class="board-selector" role="group" aria-label="Choose a board"></div>
           <div class="field">
@@ -74,13 +47,39 @@
           </div>
         </section>
 
-        <section class="panel parts-panel">
-          <div class="panel-head"><h2>Shopping list</h2><span id="partTotal" class="count">0 items</span></div>
-          <div id="partsList" class="parts-list"></div>
+        <section class="panel catalog" aria-label="Accessory catalog">
+          <div class="sidebar-head">
+            <h2>Accessories</h2>
+            <span class="count" id="catalogCount">9 pieces</span>
+          </div>
+          <div class="search-wrap"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="searchInput" type="search" placeholder="Search accessories" aria-label="Search accessories"></div>
+          <div class="filter-row" role="group" aria-label="Filter accessories"><button class="filter active" data-filter="all" type="button">All</button><button class="filter" data-filter="mounting" type="button">Mounts</button><button class="filter" data-filter="storage" type="button">Storage</button><button class="filter" data-filter="display" type="button">Display</button><button class="filter" data-filter="small" type="button">Small</button></div>
+          <div id="catalogList" class="catalog-list"></div>
+          <p class="sidebar-note">Drag a piece onto a board, or press <kbd>+</kbd> to drop it in the first free spot.</p>
         </section>
 
         <p class="disclaimer">Unofficial planning tool, not affiliated with IKEA. Sizes and hole spacing are approximate — check product details before buying. <a href="https://www.ikea.com/us/en/search/?q=SK%C3%85DIS" target="_blank" rel="noopener noreferrer">SKÅDIS at IKEA ↗</a></p>
       </aside>
+
+      <section class="stage" aria-label="Board arrangement">
+        <div class="stage-bar">
+          <span id="sizeLabel" class="stage-summary">2 boards</span>
+          <button id="resetButton" type="button" class="text-button">Clear accessories</button>
+        </div>
+        <div class="board-scroll" id="boardViewport"><div id="boardArea" class="board-area" role="group" aria-label="Boards"><div id="boardLayer"></div></div></div>
+        <div id="selectionPanel" class="selection-bar" role="toolbar" aria-label="Selected piece" hidden></div>
+        <div class="zoom-controls" role="group" aria-label="Zoom">
+          <button id="zoomOut" type="button" class="icon-button" aria-label="Zoom out" title="Zoom out (pinch in)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+          <button id="zoomFit" type="button" class="zoom-level" title="Fit boards to view">100%</button>
+          <button id="zoomIn" type="button" class="icon-button" aria-label="Zoom in" title="Zoom in (pinch out)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12"/></svg></button>
+        </div>
+        <div class="stage-hints" aria-hidden="true">
+          <span><b>Pinch</b> to zoom</span>
+          <span><b>Scroll</b> or drag the wall to pan</span>
+          <span><kbd>←</kbd><kbd>→</kbd> move by a hole</span>
+          <span><kbd>Del</kbd> remove</span>
+        </div>
+      </section>
     </main>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
