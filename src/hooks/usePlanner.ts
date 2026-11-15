@@ -62,7 +62,7 @@ export function usePlanner() {
   function selectItem(id: string | null) {
     setSelectedId(id)
     const item = layout.items.find(entry => entry.id === id)
-    if (item) { setChosenBoardId(item.boardId); setBoardHighlighted(true) }
+    if (item) { setChosenBoardId(item.boardId); setBoardHighlighted(false) }
   }
 
   function addAccessory(type: AccessoryId, spot: Hole | null = null, boardId = selectedBoardId) {
@@ -79,7 +79,7 @@ export function usePlanner() {
     if (!position) { notify(`No free holes left for a ${a.name.toLowerCase()}`); return }
     const id = nextId(), [col, row] = position
     commit(draft => { draft.items.push({ id, boardId: board.id, type, col, row, rotation: 0 }) })
-    setSelectedId(id); setChosenBoardId(board.id); setBoardHighlighted(true)
+    setSelectedId(id); setChosenBoardId(board.id); setBoardHighlighted(false)
     notify(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`)
   }
 
@@ -87,7 +87,7 @@ export function usePlanner() {
     const item = layout.items.find(entry => entry.id === id)
     if (!item || (item.col === col && item.row === row && item.boardId === boardId)) return
     commit(draft => { Object.assign(draft.items.find(entry => entry.id === id)!, { col, row, boardId }) })
-    setChosenBoardId(boardId); setBoardHighlighted(true)
+    setChosenBoardId(boardId)
   }
 
   function removeSelected() {
