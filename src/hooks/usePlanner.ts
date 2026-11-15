@@ -1,0 +1,200 @@
+import { useEffect, useState } from 'react'
+import { BOARD_SIZES, WORLD_W, accessory, clamp, nextId, plural, type AccessoryId, type BoardSize, type Finish, type Layout } from '../lib/catalog'
+import { findSpot, placementIssue, usedHoles, type Hole } from '../lib/holes'
+import { STORAGE_KEY, boardRectOverlaps, readInitialLayout, refitItems } from '../lib/layout'
+
+const HISTORY_LIMIT = 80
+
+interface History { past: Layout[]; present: Layout; future: Layout[] }
+export interface ToastMessage { id: number; text: string }
+
+/** Layout state with undo/redo, persistence and every editing action. Each edit is one undo step. */
+export function usePlanner() {
+  const [history, setHistory] = useState<History>(() => ({ past: [], present: readInitialLayout(), future: [] }))
+  const [firstVisit] = useState(() => !localStorage.getItem(STORAGE_KEY) && !location.hash.startsWith('#layout='))
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [chosenBoardId, setChosenBoardId] = useState<string | null>(null)
+  const [toast, setToast] = useState<ToastMessage | null>(null)
+  const [saveFailed, setSaveFailed] = useState(false)
+  const layout = history.present
+  const selectedBoardId = layout.boards.some(board => board.id === chosenBoardId) ? chosenBoardId! : layout.boards[0].id
+  const currentBoard = layout.boards.find(board => board.id === selectedBoardId)!
+  const selectedItem = layout.items.find(item => item.id === selectedId) ?? null
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(layout)) }
+    // Storage is the external system here; a failed write is only known once we try it.
+    // oxlint-disable-next-line react/set-state-in-effect
+    catch { setSaveFailed(true) }
+  }, [layout])
+
+  const notify = (text: string) => setToast({ id: Date.now() + Math.random(), text })
+  const boardLabel = (id: string) => `board ${layout.boards.findIndex(board => board.id === id) + 1}`
+
+  /** Applies `change` to a copy of the layout and records it as one undo step. */
+  function commit<T>(change: (draft: Layout) => T): T {
+    const draft = structuredClone(layout)
+    const result = change(draft)
+    setHistory(h => ({ past: [...h.past, h.present].slice(-HISTORY_LIMIT), present: draft, future: [] }))
+    return result
+  }
+
+  function undo() {
+    if (!history.past.length) return
+    setHistory(h => h.past.length ? { past: h.past.slice(0, -1), present: h.past.at(-1)!, future: [h.present, ...h.future] } : h)
+    setSelectedId(null)
+  }
+  function redo() {
+    if (!history.future.length) return
+    setHistory(h => h.future.length ? { past: [...h.past, h.present], present: h.future[0], future: h.future.slice(1) } : h)
+    setSelectedId(null)
+  }
+  function replace(next: Layout) {
+    setHistory({ past: [], present: next, future: [] })
+    setSelectedId(null)
+    setChosenBoardId(null)
+  }
+
+  function selectBoard(id: string) { setChosenBoardId(id); setSelectedId(null) }
+  function selectItem(id: string | null) {
+    setSelectedId(id)
+    const item = layout.items.find(entry => entry.id === id)
+    if (item) setChosenBoardId(item.boardId)
+  }
+
+  function addAccessory(type: AccessoryId, spot: Hole | null = null, boardId = selectedBoardId) {
+    const a = accessory(type)
+    if (!a) return
+    const preferred = layout.boards.find(board => board.id === boardId) ?? currentBoard
+    let board = preferred, position = spot
+    if (!position) {
+      for (const candidate of [preferred, ...layout.boards.filter(entry => entry !== preferred)]) {
+        position = findSpot(candidate, layout.items, type, 0)
+        if (position) { board = candidate; break }
+      }
+    }
+    if (!position) { notify(`No free holes left for a ${a.name.toLowerCase()}`); return }
+    const id = nextId(), [col, row] = position
+    commit(draft => { draft.items.push({ id, boardId: board.id, type, col, row, rotation: 0 }) })
+    setSelectedId(id); setChosenBoardId(board.id)
+    notify(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`)
+  }
+
+  function moveItem(id: string, boardId: string, col: number, row: number) {
+    const item = layout.items.find(entry => entry.id === id)
+    if (!item || (item.col === col && item.row === row && item.boardId === boardId)) return
+    commit(draft => { Object.assign(draft.items.find(entry => entry.id === id)!, { col, row, boardId }) })
+    setChosenBoardId(boardId)
+  }
+
+  function removeSelected() {
+    if (!selectedItem) return
+    commit(draft => { draft.items = draft.items.filter(entry => entry.id !== selectedItem.id) })
+    setSelectedId(null)
+    notify('Accessory removed')
+  }
+  function duplicateSelected() {
+    if (!selectedItem) return
+    const board = layout.boards.find(entry => entry.id === selectedItem.boardId)!
+    const spot = findSpot(board, layout.items, selectedItem.type, selectedItem.rotation, [selectedItem.col + 2, selectedItem.row + 2])
+    if (!spot) { notify('No free holes left for a copy on this board'); return }
+    const id = nextId()
+    commit(draft => { draft.items.push({ ...selectedItem, id, col: spot[0], row: spot[1] }) })
+    setSelectedId(id)
+    notify('Accessory copied')
+  }
+  function rotateSelected() {
+    if (!selectedItem) return
+    const item = selectedItem, board = layout.boards.find(entry => entry.id === item.boardId)!, rotation = item.rotation === 90 ? 0 : 90
+    const spot = placementIssue(board, item.type, rotation, item.col, item.row, usedHoles(layout.items, board, item.id))
+      ? findSpot(board, layout.items, item.type, rotation, [item.col, item.row], item.id)
+      : [item.col, item.row]
+    if (!spot) { notify('There are no free holes to rotate this piece into'); return }
+    commit(draft => { Object.assign(draft.items.find(entry => entry.id === item.id)!, { rotation, col: spot[0], row: spot[1] }) })
+  }
+  /** Moves the selected piece `holes` steps in a direction, skipping over holes that are in use. */
+  function nudgeSelected([dx, dy]: [number, number], holes: number) {
+    if (!selectedItem) return
+    const item = selectedItem, board = layout.boards.find(entry => entry.id === item.boardId)!, used = usedHoles(layout.items, board, item.id)
+    for (let n = holes; n < 60; n++) {
+      const col = item.col + dx * 2 * n, row = item.row + dy * 2 * n, issue = placementIssue(board, item.type, item.rotation, col, row, used)
+      if (issue === 'edge') break
+      if (!issue) { commit(draft => { Object.assign(draft.items.find(entry => entry.id === item.id)!, { col, row }) }); return }
+    }
+    notify('No free holes in that direction')
+  }
+
+  function clearItems() {
+    if (!layout.items.length) return
+    commit(draft => { draft.items = [] })
+    setSelectedId(null)
+    notify('Accessories cleared — use Undo to bring them back')
+  }
+  function rename(name: string) {
+    const next = name.trim() || 'My perfect setup'
+    if (next !== layout.name) commit(draft => { draft.name = next.slice(0, 60) })
+  }
+
+  function changeSize(size: BoardSize) {
+    if (size === currentBoard.size) return
+    const removed = commit(draft => {
+      const board = draft.boards.find(entry => entry.id === currentBoard.id)!, fromSize = board.size
+      board.size = size
+      board.x = clamp(board.x, 0, WORLD_W - BOARD_SIZES[size][0])
+      const count = refitItems(draft, board, fromSize)
+      const other = draft.boards.find(entry => entry.id !== board.id)
+      if (other && boardRectOverlaps(board, other)) {
+        const left = board.x <= other.x ? board : other, right = left === board ? other : board
+        const leftWidth = BOARD_SIZES[left.size][0], rightWidth = BOARD_SIZES[right.size][0]
+        left.x = clamp(left.x, 0, WORLD_W - leftWidth - rightWidth)
+        right.x = left.x + leftWidth
+      }
+      return count
+    })
+    if (removed) notify(`${plural(removed, 'piece')} didn’t fit the smaller board — Undo brings them back`)
+  }
+  function changeColor(color: Finish) {
+    if (color !== currentBoard.color) commit(draft => { draft.boards.find(entry => entry.id === currentBoard.id)!.color = color })
+  }
+  function addBoard() {
+    if (layout.boards.length >= 2) return
+    const id = `board-${Date.now()}`
+    commit(draft => {
+      const first = draft.boards[0], firstWidth = BOARD_SIZES[first.size][0]
+      first.x = clamp(first.x, 0, WORLD_W - firstWidth - 56 - 6)
+      draft.boards.push({ id, size: '56x56', color: first.color, x: first.x + firstWidth + 6, y: first.y })
+    })
+    selectBoard(id)
+    notify('Second board added — drag its handle to arrange it')
+  }
+  function removeBoard() {
+    if (layout.boards.length <= 1) return
+    const boardId = selectedBoardId
+    commit(draft => {
+      draft.boards = draft.boards.filter(board => board.id !== boardId)
+      draft.items = draft.items.filter(item => item.boardId !== boardId)
+    })
+    setSelectedId(null); setChosenBoardId(null)
+    notify('Board removed — Undo can restore it')
+  }
+  /** Moves a board unless it would overlap the other one. Returns whether it moved. */
+  function moveBoard(id: string, x: number, y: number, announceSnap = false) {
+    const board = layout.boards.find(entry => entry.id === id)!, other = layout.boards.find(entry => entry.id !== id)
+    if (other && boardRectOverlaps({ ...board, x, y }, other)) return false
+    if (board.x === x && board.y === y) return true
+    commit(draft => { Object.assign(draft.boards.find(entry => entry.id === id)!, { x, y }) })
+    const w = BOARD_SIZES[board.size][0]
+    if (announceSnap && other && (x + w === other.x || other.x + BOARD_SIZES[other.size][0] === x)) notify('Boards snapped together')
+    return true
+  }
+
+  return {
+    layout, firstVisit, saveFailed, toast, notify,
+    canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
+    selectedId, selectedItem, selectedBoardId, currentBoard, selectBoard, selectItem,
+    addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems, rename,
+    changeSize, changeColor, addBoard, removeBoard, moveBoard,
+  }
+}
+
+export type Planner = ReturnType<typeof usePlanner>
