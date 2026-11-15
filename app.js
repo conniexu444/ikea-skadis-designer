@@ -1,6 +1,6 @@
 const HOLE_PITCH = 2, HOLE_MARGIN = 2;
 const ACCESSORIES = [
-  { id: 'wall-mount', name: 'Wall mount', group: 'mounting', w: 2, h: 2, top: 1, pegs: [[0, 0]], detail: 'Screws the board to the wall' },
+  { id: 'wall-mount', name: 'Wall mount', group: 'mounting', w: 3, h: 3, pegs: [[0, 0]], detail: 'Screws the board to the wall' },
   { id: 'hook', name: 'Hook', group: 'small', w: 7, h: 8, pegs: [[0, 0]], detail: 'For headphones, keys & more' },
   { id: 'double-hook', name: 'Double hook', group: 'small', w: 13, h: 8, pegs: [[0, 0], [4, 0]], detail: 'A little extra hanging room' },
   { id: 'container', name: 'Container', group: 'storage', w: 14, h: 16, pegs: [[0, 0], [8, 0]], detail: 'For pens and small things' },
@@ -109,26 +109,27 @@ function nextId() { return `piece-${Date.now()}-${Math.random().toString(36).sli
 function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
 
 // SKÅDIS holes sit on a staggered grid: 2 cm apart diagonally, so holes in the same row or column are 4 cm apart.
-// The 36×56 board has 28 rows alternating 9 and 8 holes (8 on the bottom row), so 14 holes in every column.
-const HOLE_LAYOUTS = { '36x56': { rows: 28, y0: 1 } };
+// The 36×56 board's rows alternate 8 and 9 holes, starting and ending with 8 (parity 1 shifts the first row in).
+const HOLE_LAYOUTS = { '36x56': { parity: 1 } };
 function holeGrid(size) {
   const [bw, bh] = BOARD_SIZES[size], layout = HOLE_LAYOUTS[size] || {};
   return {
     cols: layout.cols ?? Math.round((bw - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1,
     rows: layout.rows ?? Math.round((bh - 2 * HOLE_MARGIN) / HOLE_PITCH) + 1,
     x0: layout.x0 ?? HOLE_MARGIN,
-    y0: layout.y0 ?? HOLE_MARGIN
+    y0: layout.y0 ?? HOLE_MARGIN,
+    parity: layout.parity ?? 0
   };
 }
 function holeExists(size, col, row) {
-  const { cols, rows } = holeGrid(size);
-  return Number.isInteger(col) && Number.isInteger(row) && col >= 0 && row >= 0 && col < cols && row < rows && (col + row) % 2 === 0;
+  const { cols, rows, parity } = holeGrid(size);
+  return Number.isInteger(col) && Number.isInteger(row) && col >= 0 && row >= 0 && col < cols && row < rows && (col + row) % 2 === parity;
 }
 function holePoint(size, col, row) { const { x0, y0 } = holeGrid(size); return [x0 + col * HOLE_PITCH, y0 + row * HOLE_PITCH]; }
 function holeKey(col, row) { return `${col},${row}`; }
 function allHoles(size) {
-  const { cols, rows } = holeGrid(size), holes = [];
-  for (let row = 0; row < rows; row++) for (let col = row % 2; col < cols; col += 2) holes.push([col, row]);
+  const { cols, rows, parity } = holeGrid(size), holes = [];
+  for (let row = 0; row < rows; row++) for (let col = (row + parity) % 2; col < cols; col += 2) holes.push([col, row]);
   return holes;
 }
 function geometry(type, rotation = 0) {
@@ -276,7 +277,7 @@ function refitItems(board, fromSize = board.size) {
     let { col, row } = item;
     if (fromSize !== board.size) {
       const [x, y] = holePoint(fromSize, col, row);
-      [col, row] = nearestHole(board.size, x > ow / 2 ? x + nw - ow : x, y > oh / 2 ? y + nh - oh : y);
+      [col, row] = nearestHole(board.size, x > ow / 2 ? x + nw - ow + 0.02 : x - 0.02, y > oh / 2 ? y + nh - oh + 0.01 : y - 0.01);
     }
     const spot = placementIssue(board, item.type, item.rotation, col, row, usedHoles(kept, board)) ? findSpot(board, kept, item.type, item.rotation, [col, row]) : [col, row];
     if (spot) kept.push({ ...item, col: spot[0], row: spot[1] }); else removed++;
