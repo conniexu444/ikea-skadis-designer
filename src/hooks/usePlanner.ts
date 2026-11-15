@@ -93,7 +93,7 @@ export function usePlanner() {
     const id = nextId(), [col, row] = position
     commit(draft => { draft.items.push({ id, boardId: board.id, type, col, row, rotation: 0 }) })
     setSelectedId(id); setArea(null); setChosenBoardId(board.id); setBoardHighlighted(false)
-    notify(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`)
+    if (board !== preferred) notify(`${a.name} added to ${boardLabel(board.id)} — no room left on the selected board`)
   }
 
   function moveItem(id: string, boardId: string, col: number, row: number) {
@@ -107,7 +107,6 @@ export function usePlanner() {
     if (!selectedItem) return
     commit(draft => { draft.items = draft.items.filter(entry => entry.id !== selectedItem.id) })
     setSelectedId(null)
-    notify('Accessory removed')
   }
   function duplicateSelected() {
     if (!selectedItem) return
@@ -117,7 +116,6 @@ export function usePlanner() {
     const id = nextId()
     commit(draft => { draft.items.push({ ...selectedItem, id, col: spot[0], row: spot[1] }) })
     setSelectedId(id)
-    notify('Accessory copied')
   }
   function rotateSelected() {
     if (!selectedItem) return
@@ -144,7 +142,6 @@ export function usePlanner() {
     if (!layout.items.length) return
     commit(draft => { draft.items = [] })
     setSelectedId(null); setArea(null)
-    notify('Accessories cleared — use Undo to bring them back')
   }
 
   function changeSize(size: BoardSize) {
@@ -166,7 +163,6 @@ export function usePlanner() {
     const id = `board-${nextId().slice(6)}`, spot = freeBoardSpot(layout.boards, '56x56', currentBoard)
     commit(draft => { draft.boards.push({ id, size: '56x56', color: currentBoard.color, ...spot }) })
     selectBoard(id)
-    notify('Board added — drag it to arrange it')
   }
   function removeBoard() {
     if (layout.boards.length <= 1) return
@@ -176,7 +172,6 @@ export function usePlanner() {
       draft.items = draft.items.filter(item => item.boardId !== boardId)
     })
     setSelectedId(null); setArea(null); setChosenBoardId(null)
-    notify('Board removed — Undo can restore it')
   }
   /** Moves a board unless it would overlap another one. Returns whether it moved. */
   function moveBoard(id: string, x: number, y: number) {
@@ -189,11 +184,10 @@ export function usePlanner() {
 
   /** Copies the selected piece, or the highlighted board with its pieces. Returns whether anything was copied. */
   function copySelection() {
-    if (groupSelection) { setClipboard({ kind: 'group', ...groupContents(groupSelection) }); notify('Selection copied'); return true }
-    if (selectedItem) { setClipboard({ kind: 'item', item: selectedItem }); notify('Accessory copied'); return true }
+    if (groupSelection) { setClipboard({ kind: 'group', ...groupContents(groupSelection) }); return true }
+    if (selectedItem) { setClipboard({ kind: 'item', item: selectedItem }); return true }
     if (!boardHighlighted) return false
     setClipboard({ kind: 'board', board: currentBoard, items: layout.items.filter(item => item.boardId === currentBoard.id) })
-    notify('Board copied')
     return true
   }
   function paste() {
@@ -208,7 +202,6 @@ export function usePlanner() {
       commit(draft => { draft.items.push(pasted) })
       setClipboard({ kind: 'item', item: pasted })
       setSelectedId(pasted.id); setArea(null); setChosenBoardId(board.id); setBoardHighlighted(false)
-      notify('Accessory pasted')
       return
     }
     if (layout.boards.length >= MAX_BOARDS) { notify(`You can have up to ${MAX_BOARDS} boards`); return }
@@ -218,7 +211,6 @@ export function usePlanner() {
       draft.items.push(...clipboard.items.map(item => ({ ...item, id: nextId(), boardId: id })))
     })
     selectBoard(id)
-    notify('Board pasted')
   }
 
   /** Selects what a selection box covers. A box around a single piece selects just that piece. */
@@ -271,7 +263,6 @@ export function usePlanner() {
       draft.items = draft.items.filter(item => !itemIds.has(item.id) && !removedBoards.has(item.boardId))
     })
     setArea(null)
-    notify('Selection removed — Undo brings it back')
   }
   function pasteGroup(copied: { boards: Board[]; items: Item[] }) {
     if (layout.boards.length + copied.boards.length > MAX_BOARDS) { notify(`You can have up to ${MAX_BOARDS} boards`); return }
@@ -296,7 +287,7 @@ export function usePlanner() {
     })
     setClipboard({ kind: 'group', boards: result.boards, items: result.items })
     selectArea({ boardIds: result.boards.map(board => board.id), itemIds: result.items.map(item => item.id) })
-    notify(result.skipped ? `Pasted — ${plural(result.skipped, 'piece')} had no free holes left` : 'Selection pasted')
+    if (result.skipped) notify(`Pasted — ${plural(result.skipped, 'piece')} had no free holes left`)
   }
   function duplicateGroup() { if (groupSelection) pasteGroup(groupContents(groupSelection)) }
 

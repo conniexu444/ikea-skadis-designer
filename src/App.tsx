@@ -30,7 +30,7 @@ export default function App() {
   useEffect(() => {
     const onHashChange = () => {
       const shared = sharedLayout(location.hash)
-      if (shared) { latest.current.planner.replace(shared); latest.current.planner.notify('Shared layout opened') }
+      if (shared) latest.current.planner.replace(shared)
     }
     const onKeyDown = (event: KeyboardEvent) => {
       const { planner, helpOpen } = latest.current
@@ -79,7 +79,7 @@ export default function App() {
   }, [latest])
 
   async function download() {
-    planner.notify(await downloadPng(planner.layout) ? 'Layout image downloaded' : 'Could not create an image')
+    if (!await downloadPng(planner.layout)) planner.notify('Could not create an image')
   }
 
   const ghost = drag?.kind === 'piece' ? drag : null
