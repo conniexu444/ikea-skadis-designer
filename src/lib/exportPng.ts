@@ -1,11 +1,13 @@
-import { BOARD_SIZES, WORLD_H, WORLD_W, accessory, type Layout } from './catalog'
+import { BOARD_SIZES, accessory, type Layout } from './catalog'
 import { artSvg } from './art'
 import { allHoles, holePoint, itemPlacement } from './holes'
 
 const PALETTE = { white: ['#fafaf8', '#e7e8e4', '#b6c0ba'], black: ['#33383b', '#252d30', '#131b1e'], wood: ['#c9a87f', '#b38c64', '#785c40'] }
 
 export function layoutSvg(layout: Layout, scale = 10, pad = 45) {
-  const W = WORLD_W * scale + pad * 2, H = WORLD_H * scale + pad * 2
+  const left = Math.min(...layout.boards.map(board => board.x)), top = Math.min(...layout.boards.map(board => board.y))
+  const right = Math.max(...layout.boards.map(board => board.x + BOARD_SIZES[board.size][0])), bottom = Math.max(...layout.boards.map(board => board.y + BOARD_SIZES[board.size][1]))
+  const W = (right - left) * scale + pad * 2, H = (bottom - top) * scale + pad * 2
   const slot = (size: Parameters<typeof holePoint>[0], col: number, row: number, fill: string) => {
     const [x, y] = holePoint(size, col, row)
     return `<rect x="${(x - 0.25) * scale}" y="${(y - 0.75) * scale}" width="${0.5 * scale}" height="${1.5 * scale}" rx="${0.25 * scale}" fill="${fill}"/>`
@@ -23,7 +25,7 @@ export function layoutSvg(layout: Layout, scale = 10, pad = 45) {
     }).join('')
     const pegs = boardItems.filter(item => item.type !== 'wall-mount')
       .map(item => itemPlacement(item, board.size).holes.map(([col, row]) => slot(board.size, col, row, '#e2b33c')).join('')).join('')
-    return `<g transform="translate(${pad + board.x * scale} ${pad + board.y * scale})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/>${holes}${items}${pegs}</g>`
+    return `<g transform="translate(${pad + (board.x - left) * scale} ${pad + (board.y - top) * scale})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/>${holes}${items}${pegs}</g>`
   }).join('')
   return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="#e9eeea"/>${boards}</svg>`, width: W, height: H }
 }

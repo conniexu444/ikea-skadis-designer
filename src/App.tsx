@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { BOARD_SIZES, WORLD_H, WORLD_W, accessory, clamp } from './lib/catalog'
+import { accessory } from './lib/catalog'
 import { downloadPng } from './lib/exportPng'
 import { boardRectOverlaps, shareLink, sharedLayout } from './lib/layout'
 import { useCamera } from './hooks/useCamera'
@@ -42,8 +42,8 @@ export default function App() {
       const arrow = ARROWS[event.key], grip = target.closest<HTMLElement>('.board-grip')
       if (grip && arrow) {
         event.preventDefault()
-        const board = planner.layout.boards.find(entry => entry.id === grip.dataset.grip)!, [bw, bh] = BOARD_SIZES[board.size], step = event.shiftKey ? 5 : 1
-        const x = clamp(board.x + arrow[0] * step, 0, WORLD_W - bw), y = clamp(board.y + arrow[1] * step, 0, WORLD_H - bh)
+        const board = planner.layout.boards.find(entry => entry.id === grip.dataset.grip)!, step = event.shiftKey ? 5 : 1
+        const x = board.x + arrow[0] * step, y = board.y + arrow[1] * step
         const other = planner.layout.boards.find(entry => entry.id !== board.id)
         if (!other || !boardRectOverlaps({ ...board, x, y }, other)) planner.moveBoard(board.id, x, y)
         return

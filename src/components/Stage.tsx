@@ -1,5 +1,5 @@
-import { useRef, useState, type PointerEvent, type RefObject } from 'react'
-import { WORLD_W, accessory, plural } from '../lib/catalog'
+import { useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
+import { accessory, plural } from '../lib/catalog'
 import { holeStats } from '../lib/holes'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
@@ -15,6 +15,8 @@ interface Props {
   startPieceDrag: ReturnType<typeof useDrag>['startPieceDrag']
   startBoardDrag: ReturnType<typeof useDrag>['startBoardDrag']
 }
+
+const GRID_CM = 4
 
 export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startBoardDrag }: Props) {
   const { layout, selectedItem } = planner
@@ -52,10 +54,11 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
       </div>
       <div
         ref={viewportRef} className={`board-scroll ${panning ? 'panning' : ''}`}
+        style={{ backgroundSize: `${GRID_CM * scale}px ${GRID_CM * scale}px`, backgroundPosition: `${x}px ${y}px` }}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
       >
         {camera.ready && (
-          <div className="board-area" role="group" aria-label="Boards" style={{ width: WORLD_W * scale, left: x, top: y }}>
+          <div className="board-area" role="group" aria-label="Boards" style={{ left: x, top: y, '--cm': `${scale}px` } as CSSProperties}>
             {layout.boards.map((board, index) => (
               <BoardView
                 key={board.id} board={board} index={index}
@@ -90,7 +93,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
       </div>
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
-        <span><b>Scroll</b> or drag the wall to pan</span>
+        <span><b>Scroll</b> or drag the canvas to pan</span>
         <span><kbd>←</kbd><kbd>→</kbd> move by a hole</span>
         <span><kbd>Del</kbd> remove</span>
       </div>

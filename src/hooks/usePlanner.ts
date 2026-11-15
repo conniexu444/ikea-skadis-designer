@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BOARD_SIZES, WORLD_W, accessory, clamp, nextId, plural, type AccessoryId, type BoardSize, type Finish, type Layout } from '../lib/catalog'
+import { BOARD_SIZES, accessory, nextId, plural, type AccessoryId, type BoardSize, type Finish, type Layout } from '../lib/catalog'
 import { findSpot, placementIssue, usedHoles, type Hole } from '../lib/holes'
 import { STORAGE_KEY, boardRectOverlaps, readInitialLayout, refitItems } from '../lib/layout'
 
@@ -140,14 +140,11 @@ export function usePlanner() {
     const removed = commit(draft => {
       const board = draft.boards.find(entry => entry.id === currentBoard.id)!, fromSize = board.size
       board.size = size
-      board.x = clamp(board.x, 0, WORLD_W - BOARD_SIZES[size][0])
       const count = refitItems(draft, board, fromSize)
       const other = draft.boards.find(entry => entry.id !== board.id)
       if (other && boardRectOverlaps(board, other)) {
         const left = board.x <= other.x ? board : other, right = left === board ? other : board
-        const leftWidth = BOARD_SIZES[left.size][0], rightWidth = BOARD_SIZES[right.size][0]
-        left.x = clamp(left.x, 0, WORLD_W - leftWidth - rightWidth)
-        right.x = left.x + leftWidth
+        right.x = left.x + BOARD_SIZES[left.size][0]
       }
       return count
     })
@@ -161,7 +158,6 @@ export function usePlanner() {
     const id = `board-${Date.now()}`
     commit(draft => {
       const first = draft.boards[0], firstWidth = BOARD_SIZES[first.size][0]
-      first.x = clamp(first.x, 0, WORLD_W - firstWidth - 56 - 6)
       draft.boards.push({ id, size: '56x56', color: first.color, x: first.x + firstWidth + 6, y: first.y })
     })
     selectBoard(id)
