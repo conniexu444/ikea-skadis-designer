@@ -27,10 +27,9 @@ interface Props {
   drag: Drag | null
   onGripDown: (event: PointerEvent, boardId: string) => void
   onItemDown: (event: PointerEvent, item: Item) => void
-  onBoardDown: (boardId: string) => void
 }
 
-export function BoardView({ board, index, items, selected, selectedId, drag, onGripDown, onItemDown, onBoardDown }: Props) {
+export function BoardView({ board, index, items, selected, selectedId, drag, onGripDown, onItemDown }: Props) {
   const [bw, bh] = BOARD_SIZES[board.size]
   const moving = drag?.kind === 'board' && drag.id === board.id ? drag : null
   const x = moving?.preview.x ?? board.x, y = moving?.preview.y ?? board.y
@@ -43,11 +42,7 @@ export function BoardView({ board, index, items, selected, selectedId, drag, onG
       className={`board-wrap ${selected ? 'selected-board' : ''} ${moving ? 'board-moving' : ''} ${moving?.preview.snapped ? 'board-snap' : ''}`}
       data-board-id={board.id}
       style={{ left: pct(x, WORLD_W), top: pct(y, WORLD_H), width: pct(bw, WORLD_W), height: pct(bh, WORLD_H) }}
-      onPointerDown={event => {
-        const target = event.target as Element
-        if (target.closest('.board-grip')) onGripDown(event, board.id)
-        else if (!target.closest('.board-item')) onBoardDown(board.id)
-      }}
+      onPointerDown={event => { if (!(event.target as Element).closest('.board-item')) onGripDown(event, board.id) }}
     >
       <button className="board-grip" type="button" data-grip={board.id} aria-label={`Drag board ${index + 1} to move it`}>
         <span className="grip-dots" aria-hidden="true">⠿</span> Board {index + 1}

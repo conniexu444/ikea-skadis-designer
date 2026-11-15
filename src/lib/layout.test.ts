@@ -44,4 +44,19 @@ describe('snapBoard', () => {
     const [a, b] = DEFAULT_LAYOUT.boards
     expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 56 + 4, a.y + 2)).toEqual({ x: a.x + 56, y: a.y, snapped: true })
   })
+
+  it('lets a snapped board slide along the edge', () => {
+    const [a, b] = DEFAULT_LAYOUT.boards
+    expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 56 + 3, a.y + 10)).toEqual({ x: a.x + 56, y: a.y + 10, snapped: true })
+  })
+
+  it('snaps to the left edge too', () => {
+    const [a, b] = DEFAULT_LAYOUT.boards
+    expect(snapBoard(DEFAULT_LAYOUT.boards, a, b.x - 56 - 5, b.y)).toEqual({ x: b.x - 56, y: b.y, snapped: true })
+  })
+
+  it('leaves a far-away board where it was dropped', () => {
+    const [a, b] = DEFAULT_LAYOUT.boards
+    expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 56 + 20, a.y)).toMatchObject({ x: a.x + 76, snapped: false })
+  })
 })
