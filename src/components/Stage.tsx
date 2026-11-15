@@ -1,6 +1,5 @@
 import { useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
 import { accessory, plural } from '../lib/catalog'
-import { holeStats } from '../lib/holes'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
 import type { Planner } from '../hooks/usePlanner'
@@ -22,10 +21,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
   const { layout, selectedItem } = planner
   const pan = useRef<{ id: number; x: number; y: number } | null>(null)
   const [panning, setPanning] = useState(false)
-  const totals = layout.boards.reduce((sum, board) => {
-    const { used, total } = holeStats(layout.items, board)
-    return { used: sum.used + used, total: sum.total + total }
-  }, { used: 0, total: 0 })
 
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || (event.target as Element).closest('.board-wrap')) return
@@ -49,7 +44,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
   return (
     <section className="stage" aria-label="Board arrangement">
       <div className="stage-bar">
-        <span className="stage-summary">{plural(layout.boards.length, 'board')} · {totals.used} of {totals.total} holes used</span>
         <button type="button" className="text-button" onClick={planner.clearItems}>Clear accessories</button>
       </div>
       <div

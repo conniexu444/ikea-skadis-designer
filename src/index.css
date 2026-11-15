@@ -97,8 +97,7 @@ svg { flex: none; }
 
 /* Stage */
 .stage { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--canvas); }
-.stage-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px 0; }
-.stage-summary { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; background: #ffffffb3; backdrop-filter: blur(6px); color: var(--ink-2); font-size: 12px; font-weight: 600; box-shadow: var(--shadow-sm); }
+.stage-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 20px 0; }
 .board-scroll { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; }
 .board-scroll.panning { cursor: grabbing; }
 .board-scroll .board-wrap { cursor: default; }
