@@ -24,10 +24,7 @@ export function AppBar({ name, saveFailed, canUndo, canRedo, onRename, onUndo, o
           onBlur={event => onRename(event.target.value)}
           onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur() }}
         />
-        <span className="save-status">
-          <span className="status-dot" aria-hidden="true" />
-          <span>{saveFailed ? 'Storage unavailable — download your layout' : 'Saved in this browser'}</span>
-        </span>
+        {saveFailed && <span className="save-status" role="status">Storage unavailable — download your layout</span>}
       </div>
       <div className="appbar-actions">
         <div className="button-group" role="group" aria-label="History">

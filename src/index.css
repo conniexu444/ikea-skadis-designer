@@ -47,8 +47,7 @@ svg { flex: none; }
 .name-input { min-width: 0; width: 260px; height: 34px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; font-weight: 600; font-size: 15px; }
 .name-input:hover { border-color: var(--line); }
 .name-input:focus { outline: none; border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
-.save-status { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #3fa66b; }
+.save-status { color: var(--danger); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .appbar-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .button-group { display: flex; padding-right: 8px; margin-right: 4px; border-right: 1px solid var(--line); }
 
