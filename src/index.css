@@ -36,8 +36,8 @@ svg { flex: none; }
 /* App frame */
 .app { height: 100dvh; display: grid; grid-template-rows: 26px 60px minmax(0, 1fr); }
 .sponsor-banner { overflow: hidden; background: #5b5f64; color: #f4f2ee; font: 400 16px/26px var(--display); letter-spacing: .03em; white-space: nowrap; }
-.sponsor-track { display: flex; width: max-content; animation: sponsor-scroll 60s linear infinite; }
-.sponsor-track span { padding-right: 72px; }
+.sponsor-track { display: flex; width: max-content; animation: sponsor-scroll 120s linear infinite; }
+.sponsor-track span { padding-right: 60vw; }
 @keyframes sponsor-scroll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .sponsor-track { animation: none; } }
 .appbar { display: flex; align-items: center; gap: 20px; padding: 0 16px 0 20px; background: var(--surface); border-bottom: 1px solid var(--line); }

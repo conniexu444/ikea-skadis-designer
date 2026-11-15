@@ -78,7 +78,7 @@ export default function App() {
       <div className="app">
         <div className="sponsor-banner" role="note" aria-label={SPONSOR_MESSAGE}>
           <div className="sponsor-track" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, index) => <span key={index}>{SPONSOR_MESSAGE}</span>)}
+            {Array.from({ length: 4 }, (_, index) => <span key={index}>{SPONSOR_MESSAGE}</span>)}
           </div>
         </div>
         <AppBar
