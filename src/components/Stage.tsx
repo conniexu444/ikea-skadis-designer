@@ -27,7 +27,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
 
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || (event.target as Element).closest('.board-wrap')) return
-    if (selectedItem) planner.selectItem(null)
+    planner.clearSelection()
     pan.current = { id: event.pointerId, x: event.clientX, y: event.clientY }
     event.currentTarget.setPointerCapture(event.pointerId)
     setPanning(true)
@@ -60,7 +60,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
               <BoardView
                 key={board.id} board={board} index={index}
                 items={layout.items.filter(item => item.boardId === board.id)}
-                selected={board.id === planner.selectedBoardId} selectedId={planner.selectedId} drag={drag}
+                selected={planner.boardHighlighted && board.id === planner.selectedBoardId} selectedId={planner.selectedId} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
               />

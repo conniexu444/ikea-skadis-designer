@@ -48,8 +48,8 @@ export default function App() {
         if (!other || !boardRectOverlaps({ ...board, x, y }, other)) planner.moveBoard(board.id, x, y)
         return
       }
+      if (event.key === 'Escape') { planner.clearSelection(); return }
       if (!planner.selectedItem) return
-      if (event.key === 'Escape') { planner.selectItem(null); return }
       if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); planner.removeSelected(); return }
       if (arrow) { event.preventDefault(); planner.nudgeSelected(arrow, event.shiftKey ? 3 : 1) }
     }

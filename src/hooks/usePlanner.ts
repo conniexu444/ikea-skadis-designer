@@ -14,6 +14,7 @@ export function usePlanner() {
   const [firstVisit] = useState(() => !localStorage.getItem(STORAGE_KEY) && !location.hash.startsWith('#layout='))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [chosenBoardId, setChosenBoardId] = useState<string | null>(null)
+  const [boardHighlighted, setBoardHighlighted] = useState(true)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)
   const layout = history.present
@@ -55,11 +56,13 @@ export function usePlanner() {
     setChosenBoardId(null)
   }
 
-  function selectBoard(id: string) { setChosenBoardId(id); setSelectedId(null) }
+  function selectBoard(id: string) { setChosenBoardId(id); setSelectedId(null); setBoardHighlighted(true) }
+  /** Clears the highlight on the canvas; the sidebar keeps the last board as the target for its settings. */
+  function clearSelection() { setSelectedId(null); setBoardHighlighted(false) }
   function selectItem(id: string | null) {
     setSelectedId(id)
     const item = layout.items.find(entry => entry.id === id)
-    if (item) setChosenBoardId(item.boardId)
+    if (item) { setChosenBoardId(item.boardId); setBoardHighlighted(true) }
   }
 
   function addAccessory(type: AccessoryId, spot: Hole | null = null, boardId = selectedBoardId) {
@@ -76,7 +79,7 @@ export function usePlanner() {
     if (!position) { notify(`No free holes left for a ${a.name.toLowerCase()}`); return }
     const id = nextId(), [col, row] = position
     commit(draft => { draft.items.push({ id, boardId: board.id, type, col, row, rotation: 0 }) })
-    setSelectedId(id); setChosenBoardId(board.id)
+    setSelectedId(id); setChosenBoardId(board.id); setBoardHighlighted(true)
     notify(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`)
   }
 
@@ -84,7 +87,7 @@ export function usePlanner() {
     const item = layout.items.find(entry => entry.id === id)
     if (!item || (item.col === col && item.row === row && item.boardId === boardId)) return
     commit(draft => { Object.assign(draft.items.find(entry => entry.id === id)!, { col, row, boardId }) })
-    setChosenBoardId(boardId)
+    setChosenBoardId(boardId); setBoardHighlighted(true)
   }
 
   function removeSelected() {
@@ -186,7 +189,7 @@ export function usePlanner() {
   return {
     layout, firstVisit, saveFailed, toast, notify,
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
-    selectedId, selectedItem, selectedBoardId, currentBoard, selectBoard, selectItem,
+    selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
     addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems, rename,
     changeSize, changeColor, addBoard, removeBoard, moveBoard,
   }
