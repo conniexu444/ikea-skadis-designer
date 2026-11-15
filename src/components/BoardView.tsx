@@ -1,6 +1,6 @@
 import { memo, type PointerEvent, type ReactNode } from 'react'
 import { BOARD_SIZES, accessory, plural, type Board, type BoardSize, type Item } from '../lib/catalog'
-import { allHoles, holePoint, itemPlacement, placement } from '../lib/holes'
+import { HOLE_PITCH, allHoles, holePoint, itemPlacement, placement } from '../lib/holes'
 import type { Drag } from '../hooks/useDrag'
 import { Art } from './Art'
 
@@ -23,16 +23,20 @@ interface Props {
   index: number
   items: Item[]
   selected: boolean
-  selectedId: string | null
+  selectedIds: Set<string>
   drag: Drag | null
   onGripDown: (event: PointerEvent, boardId: string) => void
   onItemDown: (event: PointerEvent, item: Item) => void
 }
 
-export function BoardView({ board, index, items, selected, selectedId, drag, onGripDown, onItemDown }: Props) {
+export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown }: Props) {
   const [bw, bh] = BOARD_SIZES[board.size]
   const moving = drag?.kind === 'board' && drag.id === board.id ? drag : null
-  const x = moving?.preview.x ?? board.x, y = moving?.preview.y ?? board.y
+  const group = drag?.kind === 'group' && drag.moved ? drag : null
+  const groupBoard = group?.boardIds.includes(board.id) ?? false
+  /** Selected pieces on a board that isn't moving shift hole by hole while the selection is dragged. */
+  const shifting = (item: Item) => group !== null && !groupBoard && group.itemIds.includes(item.id)
+  const x = moving?.preview.x ?? board.x + (groupBoard ? group!.dx : 0), y = moving?.preview.y ?? board.y + (groupBoard ? group!.dy : 0)
   const target = drag?.kind === 'piece' && drag.target?.board.id === board.id ? drag.target : null
   const preview = target && drag?.kind === 'piece' ? placement(board.size, drag.type, drag.rotation, target.col, target.row) : null
   const pct = (n: number, of: number) => `${n / of * 100}%`
@@ -40,7 +44,7 @@ export function BoardView({ board, index, items, selected, selectedId, drag, onG
 
   return (
     <div
-      className={`board-wrap ${selected ? 'selected-board' : ''} ${moving ? 'board-moving' : ''} ${moving?.preview.snapped ? 'board-snap' : ''}`}
+      className={`board-wrap ${selected ? 'selected-board' : ''} ${moving || groupBoard ? 'board-moving' : ''} ${moving?.preview.snapped ? 'board-snap' : ''}`}
       data-board-id={board.id}
       style={{ left: cm(x), top: cm(y), width: cm(bw), height: cm(bh) }}
       onPointerDown={event => { if (!(event.target as Element).closest('.board-item')) onGripDown(event, board.id) }}
@@ -57,10 +61,10 @@ export function BoardView({ board, index, items, selected, selectedId, drag, onG
             return (
               <div
                 key={item.id}
-                className={`board-item ${item.id === selectedId ? 'selected' : ''} ${drag?.kind === 'piece' && drag.id === item.id ? 'dragging' : ''}`}
+                className={`board-item ${selectedIds.has(item.id) ? 'selected' : ''} ${drag?.kind === 'piece' && drag.id === item.id ? 'dragging' : ''}`}
                 data-id={item.id} tabIndex={0} role="button"
                 aria-label={`${a.name}, uses ${plural(a.pegs.length, 'hole')}, select and drag to move`}
-                style={{ left: pct(ix, bw), top: pct(iy, bh), width: pct(w, bw), height: pct(h, bh) }}
+                style={{ left: pct(ix, bw), top: pct(iy, bh), width: pct(w, bw), height: pct(h, bh), transform: shifting(item) ? `translate(${cm(group!.dc * HOLE_PITCH)}, ${cm(group!.dr * HOLE_PITCH)})` : undefined }}
                 onPointerDown={event => onItemDown(event, item)}
               >
                 <Art type={item.type} style={item.rotation === 90
@@ -71,8 +75,8 @@ export function BoardView({ board, index, items, selected, selectedId, drag, onG
           })}
         </div>
         <SvgLayer size={board.size} className="board-pegs">
-          {items.filter(item => item.type !== 'wall-mount').flatMap(item => itemPlacement(item, board.size).holes.map(([col, row]) => (
-            <Slot key={`${item.id}-${col},${row}`} size={board.size} col={col} row={row} className={`peg ${item.id === selectedId ? 'active' : ''}`} />
+          {items.filter(item => item.type !== 'wall-mount' && !shifting(item)).flatMap(item => itemPlacement(item, board.size).holes.map(([col, row]) => (
+            <Slot key={`${item.id}-${col},${row}`} size={board.size} col={col} row={row} className={`peg ${selectedIds.has(item.id) ? 'active' : ''}`} />
           )))}
           {preview && target && (
             <g className={`peg-preview ${target.issue ? 'blocked' : 'open'}`}>

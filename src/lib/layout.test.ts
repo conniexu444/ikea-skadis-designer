@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Layout } from './catalog'
 import { usedHoles } from './holes'
 import type { Board } from './catalog'
-import { DEFAULT_LAYOUT, boardRectOverlaps, freeBoardSpot, refitItems, sanitizeLayout, separateBoards, snapBoard } from './layout'
+import { DEFAULT_LAYOUT, areaSelection, boardRectOverlaps, groupPasteOffset, holeDelta, freeBoardSpot, refitItems, sanitizeLayout, separateBoards, snapBoard } from './layout'
 
 describe('sanitizeLayout', () => {
   it('keeps the default layout as is', () => {
@@ -100,5 +100,42 @@ describe('more than two boards', () => {
     const boards = [board('a', 0, 0), board('b', 56, 0), board('c', 200, 200)]
     expect(snapBoard(boards, boards[2], 3, 59)).toEqual({ x: 0, y: 56, snapped: true })
     expect(snapBoard(boards, boards[2], 60, 58)).toEqual({ x: 56, y: 56, snapped: true })
+  })
+})
+
+describe('areaSelection', () => {
+  const layout: Layout = {
+    name: 'test',
+    boards: [{ id: 'a', size: '36x56', color: 'white', x: 0, y: 0 }, { id: 'b', size: '56x56', color: 'white', x: 40, y: 0 }],
+    items: [{ id: 'p', boardId: 'b', type: 'hook', col: 2, row: 2, rotation: 0 }],
+  }
+
+  it('selects a board only when it is fully inside the box', () => {
+    expect(areaSelection(layout, -1, -1, 37, 57).boardIds).toEqual(['a'])
+    expect(areaSelection(layout, -1, -1, 35, 57).boardIds).toEqual([])
+  })
+
+  it('selects an accessory the box only touches', () => {
+    const selection = areaSelection(layout, 0, 0, 47, 7)
+    expect(selection.itemIds).toEqual(['p'])
+    expect(selection.boardIds).toEqual([])
+  })
+})
+
+describe('holeDelta', () => {
+  it('rounds a drag to a step that stays on the staggered grid', () => {
+    for (const [dx, dy] of [[0, 0], [3.1, 0.2], [-5, 4.4], [1.9, 2.1], [10, -7]]) {
+      const [dc, dr] = holeDelta(dx, dy)
+      expect(Math.abs(dc + dr) % 2).toBe(0)
+      expect(Math.hypot(dc * 2 - dx, dr * 2 - dy)).toBeLessThanOrEqual(2.9)
+    }
+  })
+})
+
+describe('groupPasteOffset', () => {
+  it('places copied boards where they do not overlap anything', () => {
+    const boards: Board[] = [{ id: 'a', size: '36x56', color: 'white', x: 0, y: 0 }, { id: 'b', size: '36x56', color: 'white', x: 37, y: 0 }]
+    const [ox, oy] = groupPasteOffset(boards, boards)
+    expect(boards.some(copy => boards.some(other => boardRectOverlaps({ ...copy, id: 'x', x: copy.x + ox, y: copy.y + oy }, other)))).toBe(false)
   })
 })

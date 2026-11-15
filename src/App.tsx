@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { accessory } from './lib/catalog'
 import { downloadPng } from './lib/exportPng'
+import { HOLE_PITCH } from './lib/holes'
 import { overlapsAny, sharedLayout } from './lib/layout'
 import { useCamera } from './hooks/useCamera'
 import { useDrag } from './hooks/useDrag'
@@ -56,6 +57,15 @@ export default function App() {
         return
       }
       if (event.key === 'Escape') { planner.clearSelection(); return }
+      if (planner.groupSelection) {
+        if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); planner.removeGroup(); return }
+        if (arrow) {
+          event.preventDefault()
+          const dc = arrow[0] * 2 * (event.shiftKey ? 3 : 1), dr = arrow[1] * 2 * (event.shiftKey ? 3 : 1)
+          planner.moveGroup(dc * HOLE_PITCH, dr * HOLE_PITCH, dc, dr)
+        }
+        return
+      }
       if (!planner.selectedItem) return
       if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); planner.removeSelected(); return }
       if (arrow) { event.preventDefault(); planner.nudgeSelected(arrow, event.shiftKey ? 3 : 1) }

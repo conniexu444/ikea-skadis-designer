@@ -107,6 +107,8 @@ svg { flex: none; }
 .stage-bar { position: absolute; z-index: 15; top: 14px; right: 20px; display: flex; align-items: center; gap: 12px; }
 .board-scroll { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; }
 .board-scroll.panning { cursor: grabbing; }
+.board-scroll.pan-ready { cursor: grab; }
+.selection-box { position: absolute; z-index: 5; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); pointer-events: none; }
 .board-wrap.board-moving .board { cursor: grabbing; }
 .board-area { position: absolute; width: 0; height: 0; }
 .stage-hints { position: absolute; z-index: 10; right: 20px; bottom: 16px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; color: #7b776f; font-size: 12px; pointer-events: none; }
