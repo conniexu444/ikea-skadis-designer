@@ -7,15 +7,15 @@
   --ink: #1d232b;
   --ink-2: #4a525c;
   --muted: #858a8f;
-  --accent: #2456c9;
-  --accent-ink: #163a8c;
-  --accent-soft: #e8eefb;
+  --accent: #ff5fae;
+  --accent-ink: #c2185b;
+  --accent-soft: #ffe3f1;
   --peg: #f2c14e;
   --danger: #d1493f;
   --wall: #e6e1d8;
   --canvas: #ffffff;
   --radius: 10px;
-  --banner: #ff5fae;
+  --banner: var(--accent);
   --display: 'Jersey 15', var(--font);
   --font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --shadow-sm: 0 1px 2px #1d232b14;
@@ -145,7 +145,7 @@ svg { flex: none; }
 .board-item.dragging { opacity: .35; }
 .board-pegs .peg { fill: var(--peg); stroke: #9a7419; stroke-width: 1px; }
 .board-pegs .peg.active { fill: var(--accent); stroke: #fff; }
-.peg-preview .preview-body { fill: #2456c91a; stroke: var(--accent); stroke-width: 1.5px; stroke-dasharray: 4 3; }
+.peg-preview .preview-body { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5px; stroke-dasharray: 4 3; }
 .peg-preview .preview-peg { fill: var(--accent); stroke: #fff; stroke-width: 1px; }
 .peg-preview.blocked .preview-body { fill: #d1493f1f; stroke: var(--danger); }
 .peg-preview.blocked .preview-peg { fill: var(--danger); }
