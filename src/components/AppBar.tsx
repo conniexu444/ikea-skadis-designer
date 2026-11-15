@@ -35,9 +35,9 @@ export function AppBar({ name, saveFailed, canUndo, canRedo, onRename, onUndo, o
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5" /><path d="M20 12H9a5 5 0 0 0 0 10h3" /></svg>
           </button>
         </div>
-        <button type="button" className="button button-primary" onClick={onDownload}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>
-          <span>Download PNG</span>
+        <button type="button" className="button button-primary" title="Save as PNG image" onClick={onDownload}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 1-2Z" /><path d="M8 3v5h7V3" /><path d="M7 21v-7h10v7" /></svg>
+          <span>Save</span>
         </button>
       </div>
     </header>

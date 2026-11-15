@@ -21,7 +21,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
         <li><b>Add accessories.</b> Drag pieces onto the board or press +. Pieces snap to holes, each hole holds one thing, and pieces can hang past the board edge.</li>
         <li><b>Fine-tune.</b> Select a piece to rotate, copy, or remove it. Arrow keys move it hole by hole. Ctrl/⌘+C and Ctrl/⌘+V copy and paste a selected piece or board.</li>
         <li><b>Look closer.</b> Pinch the trackpad to zoom, and scroll or drag the canvas to move around.</li>
-        <li><b>Keep it.</b> Your layout saves in this browser. Download a PNG to share it.</li>
+        <li><b>Keep it.</b> Your layout saves in this browser. Click <b>Save</b> to download it as a PNG.</li>
       </ol>
       <button className="button button-primary" type="button" onClick={onClose}>Start planning</button>
     </dialog>
