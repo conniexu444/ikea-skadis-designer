@@ -79,15 +79,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
           </span>
         </div>
       )}
-      <div className="zoom-controls" role="group" aria-label="Zoom">
-        <button type="button" className="icon-button" aria-label="Zoom out" title="Zoom out (pinch in)" onClick={camera.zoomOut}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
-        </button>
-        <button type="button" className="zoom-level" title="Fit boards to view" onClick={camera.fitToView}>{camera.zoomPercent}%</button>
-        <button type="button" className="icon-button" aria-label="Zoom in" title="Zoom in (pinch out)" onClick={camera.zoomIn}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12" /></svg>
-        </button>
-      </div>
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
         <span><b>Scroll</b> or drag the canvas to pan</span>

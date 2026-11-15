@@ -159,10 +159,6 @@ svg { flex: none; }
 .selection-actions button { height: 34px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .selection-actions button:hover { border-color: #c5bdae; color: var(--ink); }
 .selection-actions button[data-action="remove"]:hover { border-color: #e6aaa4; color: var(--danger); background: #fdf3f2; }
-.zoom-controls { position: absolute; z-index: 20; right: 16px; bottom: 52px; display: flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow-sm); }
-.zoom-controls .icon-button { width: 32px; height: 32px; }
-.zoom-level { min-width: 54px; height: 32px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.zoom-level:hover { background: var(--bg); color: var(--ink); }
 .board-actions { display: flex; gap: 12px; }
 .board-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .board-select { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); text-align: left; color: var(--ink-2); }
@@ -229,7 +225,7 @@ svg { flex: none; }
   .stage { grid-row: 1; height: 420px; border-bottom: 1px solid var(--line); }
   .sidebar { overflow: visible; border-right: 0; }
   .stage-hints { display: none; }
-  .selection-bar, .zoom-controls { bottom: 12px; }
+  .selection-bar { bottom: 12px; }
   .selection-bar { left: 12px; transform: none; }
   .selection-name { display: none; }
   .selection-actions { padding-left: 0; border-left: 0; }

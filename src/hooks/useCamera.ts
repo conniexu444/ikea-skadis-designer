@@ -20,7 +20,7 @@ function fitCamera(boards: Board[], width: number, height: number): Camera {
 
 /**
  * Zoom and pan for the board viewport. The view fits the boards until the user zooms or pans,
- * then stays where they put it until they ask to fit again.
+ * then stays where they put it.
  *
  * Trackpad pinches arrive as ctrl+wheel (Chrome, Firefox, Edge) or gesture events (Safari):
  * pinching in zooms out and spreading zooms in, around the cursor. Plain wheel/two-finger scroll pans.
@@ -83,14 +83,9 @@ export function useCamera(viewportRef: RefObject<HTMLElement | null>, boards: Bo
     }
   }, [viewportRef])
 
-  const zoomCenter = (factor: number) => zoomAt(size.width / 2, size.height / 2, factor)
   return {
     camera,
     ready: size.width > 0,
-    zoomPercent: Math.round(camera.scale / fit.scale * 100),
-    zoomIn: () => zoomCenter(1.25),
-    zoomOut: () => zoomCenter(0.8),
-    fitToView: () => setManual(null),
     panBy,
   }
 }
