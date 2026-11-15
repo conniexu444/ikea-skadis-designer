@@ -27,7 +27,8 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
           <button type="button" className="text-button muted" disabled={layout.boards.length <= 1} onClick={planner.removeBoard}>Remove</button>
         </div>
       </div>
-      <div id="boards-panel-body" className="panel-body" hidden={!open}>
+      <div id="boards-panel-body" className="panel-collapse" inert={!open}>
+      <div className="panel-body">
       <div className="board-selector" role="group" aria-label="Choose a board">
         {layout.boards.map((board, i) => {
           const active = board.id === selectedBoardId
@@ -58,6 +59,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
             </button>
           ))}
         </div>
+      </div>
       </div>
       </div>
     </section>
