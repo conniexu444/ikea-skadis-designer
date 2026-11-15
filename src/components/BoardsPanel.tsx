@@ -43,7 +43,6 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       </div>
       <button type="button" className="button add-board" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add board</button>
       <fieldset className="board-settings" disabled={!boardHighlighted}>
-      {!boardHighlighted && <p className="board-settings-hint">Select a board to change its size or finish.</p>}
       <div className="field">
         <span className="field-label">Size <small>cm</small></span>
         <div className="segmented" role="group" aria-label="Selected board size">
