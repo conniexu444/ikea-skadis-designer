@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { BOARD_SIZES, accessory, nextId, plural, type AccessoryId, type BoardSize, type Finish, type Layout } from '../lib/catalog'
+import { accessory, nextId, plural, type AccessoryId, type Board, type BoardSize, type Finish, type Item, type Layout } from '../lib/catalog'
 import { findSpot, placementIssue, usedHoles, type Hole } from '../lib/holes'
-import { STORAGE_KEY, boardRectOverlaps, readInitialLayout, refitItems } from '../lib/layout'
+import { MAX_BOARDS, STORAGE_KEY, freeBoardSpot, overlapsAny, readInitialLayout, refitItems, separateBoards } from '../lib/layout'
 
 const HISTORY_LIMIT = 80
 
 interface History { past: Layout[]; present: Layout; future: Layout[] }
 export interface ToastMessage { id: number; text: string }
+type Clipboard = { kind: 'item'; item: Item } | { kind: 'board'; board: Board; items: Item[] }
 
 /** Layout state with undo/redo, persistence and every editing action. Each edit is one undo step. */
 export function usePlanner() {
@@ -15,6 +16,7 @@ export function usePlanner() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [chosenBoardId, setChosenBoardId] = useState<string | null>(null)
   const [boardHighlighted, setBoardHighlighted] = useState(true)
+  const [clipboard, setClipboard] = useState<Clipboard | null>(null)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)
   const layout = history.present
@@ -144,11 +146,7 @@ export function usePlanner() {
       const board = draft.boards.find(entry => entry.id === currentBoard.id)!, fromSize = board.size
       board.size = size
       const count = refitItems(draft, board, fromSize)
-      const other = draft.boards.find(entry => entry.id !== board.id)
-      if (other && boardRectOverlaps(board, other)) {
-        const left = board.x <= other.x ? board : other, right = left === board ? other : board
-        right.x = left.x + BOARD_SIZES[left.size][0]
-      }
+      separateBoards(draft.boards, board.id)
       return count
     })
     if (removed) notify(`${plural(removed, 'piece')} didn’t fit the smaller board — Undo brings them back`)
@@ -157,14 +155,11 @@ export function usePlanner() {
     if (color !== currentBoard.color) commit(draft => { draft.boards.find(entry => entry.id === currentBoard.id)!.color = color })
   }
   function addBoard() {
-    if (layout.boards.length >= 2) return
-    const id = `board-${Date.now()}`
-    commit(draft => {
-      const first = draft.boards[0], firstWidth = BOARD_SIZES[first.size][0]
-      draft.boards.push({ id, size: '56x56', color: first.color, x: first.x + firstWidth + 6, y: first.y })
-    })
+    if (layout.boards.length >= MAX_BOARDS) return
+    const id = `board-${nextId().slice(6)}`, spot = freeBoardSpot(layout.boards, '56x56', currentBoard)
+    commit(draft => { draft.boards.push({ id, size: '56x56', color: currentBoard.color, ...spot }) })
     selectBoard(id)
-    notify('Second board added — drag its handle to arrange it')
+    notify('Board added — drag it to arrange it')
   }
   function removeBoard() {
     if (layout.boards.length <= 1) return
@@ -176,14 +171,46 @@ export function usePlanner() {
     setSelectedId(null); setChosenBoardId(null)
     notify('Board removed — Undo can restore it')
   }
-  /** Moves a board unless it would overlap the other one. Returns whether it moved. */
+  /** Moves a board unless it would overlap another one. Returns whether it moved. */
   function moveBoard(id: string, x: number, y: number, snapped = false) {
-    const board = layout.boards.find(entry => entry.id === id)!, other = layout.boards.find(entry => entry.id !== id)
-    if (other && boardRectOverlaps({ ...board, x, y }, other)) return false
+    const board = layout.boards.find(entry => entry.id === id)!
+    if (overlapsAny(layout.boards, { ...board, x, y })) return false
     if (board.x === x && board.y === y) return true
     commit(draft => { Object.assign(draft.boards.find(entry => entry.id === id)!, { x, y }) })
     if (snapped) notify('Boards snapped together')
     return true
+  }
+
+  /** Copies the selected piece, or the highlighted board with its pieces. Returns whether anything was copied. */
+  function copySelection() {
+    if (selectedItem) { setClipboard({ kind: 'item', item: selectedItem }); notify('Accessory copied'); return true }
+    if (!boardHighlighted) return false
+    setClipboard({ kind: 'board', board: currentBoard, items: layout.items.filter(item => item.boardId === currentBoard.id) })
+    notify('Board copied')
+    return true
+  }
+  function paste() {
+    if (!clipboard) { notify('Select a piece or board and copy it first'); return }
+    if (clipboard.kind === 'item') {
+      const { item } = clipboard, board = currentBoard
+      const start: Hole = item.boardId === board.id ? [item.col + 2, item.row + 2] : [item.col, item.row]
+      const spot = findSpot(board, layout.items, item.type, item.rotation, start)
+      if (!spot) { notify('No free holes left on this board for the copy'); return }
+      const pasted = { ...item, id: nextId(), boardId: board.id, col: spot[0], row: spot[1] }
+      commit(draft => { draft.items.push(pasted) })
+      setClipboard({ kind: 'item', item: pasted })
+      setSelectedId(pasted.id); setChosenBoardId(board.id); setBoardHighlighted(false)
+      notify('Accessory pasted')
+      return
+    }
+    if (layout.boards.length >= MAX_BOARDS) { notify(`You can have up to ${MAX_BOARDS} boards`); return }
+    const id = `board-${nextId().slice(6)}`, spot = freeBoardSpot(layout.boards, clipboard.board.size, clipboard.board)
+    commit(draft => {
+      draft.boards.push({ ...clipboard.board, id, ...spot })
+      draft.items.push(...clipboard.items.map(item => ({ ...item, id: nextId(), boardId: id })))
+    })
+    selectBoard(id)
+    notify('Board pasted')
   }
 
   return {
@@ -191,7 +218,7 @@ export function usePlanner() {
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
     selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
     addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems, rename,
-    changeSize, changeColor, addBoard, removeBoard, moveBoard,
+    changeSize, changeColor, addBoard, removeBoard, moveBoard, copySelection, paste,
   }
 }
 

@@ -1,5 +1,6 @@
 import { BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
 import { holeStats } from '../lib/holes'
+import { MAX_BOARDS } from '../lib/layout'
 import type { Planner } from '../hooks/usePlanner'
 
 const SIZE_GRAPHIC: Record<BoardSize, string> = { '36x56': 'narrow', '56x56': 'square', '76x56': 'wide' }
@@ -12,7 +13,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       <div className="panel-head">
         <h2>Boards</h2>
         <div className="board-actions">
-          <button type="button" className="text-button" disabled={layout.boards.length >= 2} onClick={planner.addBoard}>+ Add</button>
+          <button type="button" className="text-button" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add</button>
           <button type="button" className="text-button muted" disabled={layout.boards.length <= 1} onClick={planner.removeBoard}>Remove</button>
         </div>
       </div>

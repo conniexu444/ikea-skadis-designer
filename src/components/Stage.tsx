@@ -16,6 +16,8 @@ interface Props {
   startBoardDrag: ReturnType<typeof useDrag>['startBoardDrag']
 }
 
+const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+'
+
 export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startBoardDrag }: Props) {
   const { layout, selectedItem } = planner
   const pan = useRef<{ id: number; x: number; y: number } | null>(null)
@@ -84,6 +86,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
         <span><b>Scroll</b> or drag the canvas to pan</span>
         <span><kbd>←</kbd><kbd>→</kbd> move by a hole</span>
         <span><kbd>Del</kbd> remove</span>
+        <span><kbd>{MOD}C</kbd><kbd>{MOD}V</kbd> copy, paste</span>
       </div>
     </section>
   )

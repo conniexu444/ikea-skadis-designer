@@ -25,9 +25,34 @@ export const DEFAULT_LAYOUT: Layout = {
   ],
 }
 
+export const MAX_BOARDS = 20
+const BOARD_GAP = 6
+
 export function boardRectOverlaps(a: Board, b: Board) {
   const aw = BOARD_SIZES[a.size][0], bw = BOARD_SIZES[b.size][0]
   return a.x < b.x + bw && a.x + aw > b.x && a.y < b.y + 56 && a.y + 56 > b.y
+}
+
+/** Whether `board` would overlap any other board in `boards`. */
+export const overlapsAny = (boards: Board[], board: Board) => boards.some(other => other.id !== board.id && boardRectOverlaps(board, other))
+
+/** Pushes overlapping boards to the right until none overlap. The `keepId` board, then the leftmost, stay put. */
+export function separateBoards(boards: Board[], keepId?: string) {
+  const placed: Board[] = []
+  for (const board of [...boards].sort((a, b) => (a.id === keepId ? -1 : b.id === keepId ? 1 : a.x - b.x))) {
+    let hit: Board | undefined
+    while ((hit = placed.find(other => boardRectOverlaps(board, other)))) board.x = hit.x + BOARD_SIZES[hit.size][0]
+    placed.push(board)
+  }
+}
+
+/** A free spot for a new board: beside, below, left of or above `near`, else past the rightmost board. */
+export function freeBoardSpot(boards: Board[], size: BoardSize, near: Board) {
+  const [w] = BOARD_SIZES[size], [nw] = BOARD_SIZES[near.size]
+  const spots = [[near.x + nw + BOARD_GAP, near.y], [near.x, near.y + 56 + BOARD_GAP], [near.x - w - BOARD_GAP, near.y], [near.x, near.y - 56 - BOARD_GAP]]
+  const spot = spots.find(([x, y]) => !overlapsAny(boards, { ...near, id: '', size, x, y }))
+  if (spot) return { x: spot[0], y: spot[1] }
+  return { x: Math.max(...boards.map(board => board.x + BOARD_SIZES[board.size][0])) + BOARD_GAP, y: near.y }
 }
 
 /**
@@ -41,7 +66,7 @@ export function sanitizeLayout(input: any): Layout | null {
   let boards: Board[] | undefined
   if (Array.isArray(input.boards) && input.boards.length) {
     // oxlint-disable-next-line typescript/no-explicit-any
-    boards = input.boards.slice(0, 2).filter((board: any) => isBoardSize(board?.size)).map((board: any, i: number) => ({
+    boards = input.boards.slice(0, MAX_BOARDS).filter((board: any) => isBoardSize(board?.size)).map((board: any, i: number) => ({
       id: `board-${i + 1}`, size: board.size as BoardSize, color: validColor(board.color),
       x: clamp(Number(board.x) || 0, -CANVAS_LIMIT, CANVAS_LIMIT),
       y: clamp(Number(board.y) || 0, -CANVAS_LIMIT, CANVAS_LIMIT),
@@ -54,7 +79,7 @@ export function sanitizeLayout(input: any): Layout | null {
     ]
   }
   if (!boards?.length) return null
-  if (boards.length > 1 && boardRectOverlaps(boards[0], boards[1])) boards[1].x = boards[0].x + BOARD_SIZES[boards[0].size][0]
+  separateBoards(boards)
   const items: Item[] = []
   // oxlint-disable-next-line typescript/no-explicit-any
   input.items.slice(0, 200).forEach((item: any, i: number) => {
@@ -102,25 +127,29 @@ export function readInitialLayout(): Layout {
 const SNAP_DISTANCE = 9, ALIGN_DISTANCE = 4
 
 /**
- * Where a dragged board lands on the open canvas. Within SNAP_DISTANCE cm of the other board it snaps edge to edge
- * (beside, above or below), sliding freely along that edge but lining up with the other board's edges when close.
+ * Where a dragged board lands on the open canvas. Within SNAP_DISTANCE cm of another board it snaps edge to edge
+ * (beside, above or below), sliding freely along that edge but lining up with any board's edges when close.
  */
 export function snapBoard(boards: Board[], board: Board, x: number, y: number) {
-  const [w, h] = BOARD_SIZES[board.size], other = boards.find(entry => entry.id !== board.id)
+  const [w, h] = BOARD_SIZES[board.size]
   const half = (n: number) => Math.round(n * 2) / 2
   const free = { x: half(x), y: half(y), snapped: false }
-  if (!other) return free
-  const [ow, oh] = BOARD_SIZES[other.size]
   const align = (value: number, edges: number[]) => edges.find(edge => Math.abs(edge - value) <= ALIGN_DISTANCE) ?? half(value)
+  const others = boards.filter(other => other.id !== board.id)
+  const xEdges = others.flatMap(other => [other.x, other.x + BOARD_SIZES[other.size][0] - w])
+  const yEdges = others.flatMap(other => [other.y, other.y + BOARD_SIZES[other.size][1] - h])
   const candidates: { x: number; y: number }[] = []
-  if (y < other.y + oh && y + h > other.y) {
-    for (const cx of [other.x + ow, other.x - w]) candidates.push({ x: cx, y: align(y, [other.y, other.y + oh - h]) })
-  }
-  if (x < other.x + ow && x + w > other.x) {
-    for (const cy of [other.y + oh, other.y - h]) candidates.push({ x: align(x, [other.x, other.x + ow - w]), y: cy })
+  for (const other of others) {
+    const [ow, oh] = BOARD_SIZES[other.size]
+    if (y < other.y + oh && y + h > other.y) {
+      for (const cx of [other.x + ow, other.x - w]) candidates.push({ x: cx, y: align(y, yEdges) })
+    }
+    if (x < other.x + ow && x + w > other.x) {
+      for (const cy of [other.y + oh, other.y - h]) candidates.push({ x: align(x, xEdges), y: cy })
+    }
   }
   const best = candidates
-    .filter(c => !boardRectOverlaps({ ...board, ...c }, other))
+    .filter(c => !overlapsAny(boards, { ...board, ...c }))
     .map(c => ({ ...c, distance: Math.hypot(c.x - x, c.y - y) }))
     .sort((a, b) => a.distance - b.distance)[0]
   return best && best.distance <= SNAP_DISTANCE ? { x: best.x, y: best.y, snapped: true } : free
