@@ -29,3 +29,18 @@
 .canvas-stage .stage-ruler{pointer-events:none}
 @media(max-width:900px){.settings{display:flex}.board-area{min-width:540px}}
 @media(max-width:650px){.board-scroll{max-width:none}.board-area{min-width:540px}.canvas-stage{align-items:stretch;padding:65px 12px 43px;min-height:350px}.stage-ruler span:last-child{display:none}.board-grip{font-size:9px}}
+.board-wrap .board:before{content:none}
+.board-holes,.board-pegs{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.board-holes{z-index:1}
+.board-pegs{z-index:3;overflow:hidden}
+.board-white .board-holes{fill:#b6c0ba}
+.board-black .board-holes{fill:#121a1e}
+.board-wood .board-holes{fill:#785c40}
+.board-pegs .peg{fill:#e2b33c;stroke:#6b5420;stroke-width:1px}
+.board-pegs .peg.active{fill:#4c91a7;stroke:#1d3f58}
+.peg-preview .preview-body{fill:#4c91a71f;stroke:#4c91a7;stroke-width:1.5px;stroke-dasharray:4 3}
+.peg-preview .preview-peg{fill:#4c91a7;stroke:#fff;stroke-width:1px}
+.peg-preview.blocked .preview-body{fill:#d6534a1f;stroke:#d6534a}
+.peg-preview.blocked .preview-peg{fill:#d6534a}
+.catalog-info .hole-count{color:#9c8a5b;margin-top:2px}
+.filter-row{gap:2px}.filter{padding:6px 7px}
