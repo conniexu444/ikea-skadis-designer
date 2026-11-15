@@ -1,4 +1,4 @@
-import { BOARD_SIZES, WORLD_H, WORLD_W, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout } from './catalog'
+import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout } from './catalog'
 import { anchorFor, findSpot, holePoint, nearestHole, placementIssue, usedHoles } from './holes'
 
 export const STORAGE_KEY = 'skadis-studio-v3'
@@ -43,8 +43,8 @@ export function sanitizeLayout(input: any): Layout | null {
     // oxlint-disable-next-line typescript/no-explicit-any
     boards = input.boards.slice(0, 2).filter((board: any) => isBoardSize(board?.size)).map((board: any, i: number) => ({
       id: `board-${i + 1}`, size: board.size as BoardSize, color: validColor(board.color),
-      x: clamp(Number(board.x) || 0, 0, WORLD_W - BOARD_SIZES[board.size as BoardSize][0]),
-      y: clamp(Number(board.y) || 0, 0, WORLD_H - 56),
+      x: clamp(Number(board.x) || 0, -CANVAS_LIMIT, CANVAS_LIMIT),
+      y: clamp(Number(board.y) || 0, -CANVAS_LIMIT, CANVAS_LIMIT),
     }))
   } else if (isBoardSize(input.size as unknown)) {
     const size = input.size as BoardSize, w = BOARD_SIZES[size][0]
@@ -54,7 +54,7 @@ export function sanitizeLayout(input: any): Layout | null {
     ]
   }
   if (!boards?.length) return null
-  if (boards.length > 1 && boardRectOverlaps(boards[0], boards[1])) boards[1].x = clamp(boards[0].x + BOARD_SIZES[boards[0].size][0], 0, WORLD_W - BOARD_SIZES[boards[1].size][0])
+  if (boards.length > 1 && boardRectOverlaps(boards[0], boards[1])) boards[1].x = boards[0].x + BOARD_SIZES[boards[0].size][0]
   const items: Item[] = []
   // oxlint-disable-next-line typescript/no-explicit-any
   input.items.slice(0, 200).forEach((item: any, i: number) => {
@@ -99,16 +99,14 @@ export function readInitialLayout(): Layout {
   return structuredClone(DEFAULT_LAYOUT)
 }
 
-/** Drops a dragged board at (x, y), snapping edge to edge when it is within 9 cm of the other board. */
 const SNAP_DISTANCE = 9, ALIGN_DISTANCE = 4
 
 /**
- * Where a dragged board lands. Within SNAP_DISTANCE cm of the other board it snaps edge to edge,
- * sliding freely along that edge but lining up with the other board's top/bottom (or sides) when close.
+ * Where a dragged board lands on the open canvas. Within SNAP_DISTANCE cm of the other board it snaps edge to edge
+ * (beside, above or below), sliding freely along that edge but lining up with the other board's edges when close.
  */
 export function snapBoard(boards: Board[], board: Board, x: number, y: number) {
   const [w, h] = BOARD_SIZES[board.size], other = boards.find(entry => entry.id !== board.id)
-  x = clamp(x, 0, WORLD_W - w); y = clamp(y, 0, WORLD_H - h)
   const half = (n: number) => Math.round(n * 2) / 2
   const free = { x: half(x), y: half(y), snapped: false }
   if (!other) return free
@@ -122,7 +120,7 @@ export function snapBoard(boards: Board[], board: Board, x: number, y: number) {
     for (const cy of [other.y + oh, other.y - h]) candidates.push({ x: align(x, [other.x, other.x + ow - w]), y: cy })
   }
   const best = candidates
-    .filter(c => c.x >= 0 && c.y >= 0 && c.x + w <= WORLD_W && c.y + h <= WORLD_H && !boardRectOverlaps({ ...board, ...c }, other))
+    .filter(c => !boardRectOverlaps({ ...board, ...c }, other))
     .map(c => ({ ...c, distance: Math.hypot(c.x - x, c.y - y) }))
     .sort((a, b) => a.distance - b.distance)[0]
   return best && best.distance <= SNAP_DISTANCE ? { x: best.x, y: best.y, snapped: true } : free

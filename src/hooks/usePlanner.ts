@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BOARD_SIZES, WORLD_W, accessory, clamp, nextId, plural, type AccessoryId, type BoardSize, type Finish, type Layout } from '../lib/catalog'
+import { BOARD_SIZES, accessory, nextId, plural, type AccessoryId, type BoardSize, type Finish, type Layout } from '../lib/catalog'
 import { findSpot, placementIssue, usedHoles, type Hole } from '../lib/holes'
 import { STORAGE_KEY, boardRectOverlaps, readInitialLayout, refitItems } from '../lib/layout'
 
@@ -14,6 +14,7 @@ export function usePlanner() {
   const [firstVisit] = useState(() => !localStorage.getItem(STORAGE_KEY) && !location.hash.startsWith('#layout='))
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [chosenBoardId, setChosenBoardId] = useState<string | null>(null)
+  const [boardHighlighted, setBoardHighlighted] = useState(true)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)
   const layout = history.present
@@ -55,11 +56,13 @@ export function usePlanner() {
     setChosenBoardId(null)
   }
 
-  function selectBoard(id: string) { setChosenBoardId(id); setSelectedId(null) }
+  function selectBoard(id: string) { setChosenBoardId(id); setSelectedId(null); setBoardHighlighted(true) }
+  /** Clears the highlight on the canvas; the sidebar keeps the last board as the target for its settings. */
+  function clearSelection() { setSelectedId(null); setBoardHighlighted(false) }
   function selectItem(id: string | null) {
     setSelectedId(id)
     const item = layout.items.find(entry => entry.id === id)
-    if (item) setChosenBoardId(item.boardId)
+    if (item) { setChosenBoardId(item.boardId); setBoardHighlighted(true) }
   }
 
   function addAccessory(type: AccessoryId, spot: Hole | null = null, boardId = selectedBoardId) {
@@ -76,7 +79,7 @@ export function usePlanner() {
     if (!position) { notify(`No free holes left for a ${a.name.toLowerCase()}`); return }
     const id = nextId(), [col, row] = position
     commit(draft => { draft.items.push({ id, boardId: board.id, type, col, row, rotation: 0 }) })
-    setSelectedId(id); setChosenBoardId(board.id)
+    setSelectedId(id); setChosenBoardId(board.id); setBoardHighlighted(true)
     notify(`${a.name} added to ${boardLabel(board.id)}${board === preferred ? '' : ' — no room left on the selected board'}`)
   }
 
@@ -84,7 +87,7 @@ export function usePlanner() {
     const item = layout.items.find(entry => entry.id === id)
     if (!item || (item.col === col && item.row === row && item.boardId === boardId)) return
     commit(draft => { Object.assign(draft.items.find(entry => entry.id === id)!, { col, row, boardId }) })
-    setChosenBoardId(boardId)
+    setChosenBoardId(boardId); setBoardHighlighted(true)
   }
 
   function removeSelected() {
@@ -140,14 +143,11 @@ export function usePlanner() {
     const removed = commit(draft => {
       const board = draft.boards.find(entry => entry.id === currentBoard.id)!, fromSize = board.size
       board.size = size
-      board.x = clamp(board.x, 0, WORLD_W - BOARD_SIZES[size][0])
       const count = refitItems(draft, board, fromSize)
       const other = draft.boards.find(entry => entry.id !== board.id)
       if (other && boardRectOverlaps(board, other)) {
         const left = board.x <= other.x ? board : other, right = left === board ? other : board
-        const leftWidth = BOARD_SIZES[left.size][0], rightWidth = BOARD_SIZES[right.size][0]
-        left.x = clamp(left.x, 0, WORLD_W - leftWidth - rightWidth)
-        right.x = left.x + leftWidth
+        right.x = left.x + BOARD_SIZES[left.size][0]
       }
       return count
     })
@@ -161,7 +161,6 @@ export function usePlanner() {
     const id = `board-${Date.now()}`
     commit(draft => {
       const first = draft.boards[0], firstWidth = BOARD_SIZES[first.size][0]
-      first.x = clamp(first.x, 0, WORLD_W - firstWidth - 56 - 6)
       draft.boards.push({ id, size: '56x56', color: first.color, x: first.x + firstWidth + 6, y: first.y })
     })
     selectBoard(id)
@@ -190,7 +189,7 @@ export function usePlanner() {
   return {
     layout, firstVisit, saveFailed, toast, notify,
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
-    selectedId, selectedItem, selectedBoardId, currentBoard, selectBoard, selectItem,
+    selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
     addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems, rename,
     changeSize, changeColor, addBoard, removeBoard, moveBoard,
   }

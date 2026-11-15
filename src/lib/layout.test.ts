@@ -55,6 +55,17 @@ describe('snapBoard', () => {
     expect(snapBoard(DEFAULT_LAYOUT.boards, a, b.x - 56 - 5, b.y)).toEqual({ x: b.x - 56, y: b.y, snapped: true })
   })
 
+  it('stacks a board below or above the other', () => {
+    const [a, b] = DEFAULT_LAYOUT.boards
+    expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 3, a.y + 56 + 6)).toEqual({ x: a.x, y: a.y + 56, snapped: true })
+    expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 10, a.y - 56 - 2)).toEqual({ x: a.x + 10, y: a.y - 56, snapped: true })
+  })
+
+  it('places boards anywhere on the open canvas', () => {
+    const [, b] = DEFAULT_LAYOUT.boards
+    expect(snapBoard(DEFAULT_LAYOUT.boards, b, -40.2, 300)).toEqual({ x: -40, y: 300, snapped: false })
+  })
+
   it('leaves a far-away board where it was dropped', () => {
     const [a, b] = DEFAULT_LAYOUT.boards
     expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 56 + 20, a.y)).toMatchObject({ x: a.x + 76, snapped: false })

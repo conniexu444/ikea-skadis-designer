@@ -1,5 +1,5 @@
-import { useRef, useState, type PointerEvent, type RefObject } from 'react'
-import { WORLD_W, accessory, plural } from '../lib/catalog'
+import { useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
+import { accessory, plural } from '../lib/catalog'
 import { holeStats } from '../lib/holes'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
@@ -27,7 +27,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
 
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || (event.target as Element).closest('.board-wrap')) return
-    if (selectedItem) planner.selectItem(null)
+    planner.clearSelection()
     pan.current = { id: event.pointerId, x: event.clientX, y: event.clientY }
     event.currentTarget.setPointerCapture(event.pointerId)
     setPanning(true)
@@ -55,12 +55,12 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
       >
         {camera.ready && (
-          <div className="board-area" role="group" aria-label="Boards" style={{ width: WORLD_W * scale, left: x, top: y }}>
+          <div className="board-area" role="group" aria-label="Boards" style={{ left: x, top: y, '--cm': `${scale}px` } as CSSProperties}>
             {layout.boards.map((board, index) => (
               <BoardView
                 key={board.id} board={board} index={index}
                 items={layout.items.filter(item => item.boardId === board.id)}
-                selected={board.id === planner.selectedBoardId} selectedId={planner.selectedId} drag={drag}
+                selected={planner.boardHighlighted && board.id === planner.selectedBoardId} selectedId={planner.selectedId} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
               />
@@ -90,7 +90,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
       </div>
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
-        <span><b>Scroll</b> or drag the wall to pan</span>
+        <span><b>Scroll</b> or drag the canvas to pan</span>
         <span><kbd>←</kbd><kbd>→</kbd> move by a hole</span>
         <span><kbd>Del</kbd> remove</span>
       </div>

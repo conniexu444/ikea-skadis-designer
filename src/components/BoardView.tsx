@@ -1,5 +1,5 @@
 import { memo, type PointerEvent, type ReactNode } from 'react'
-import { BOARD_SIZES, WORLD_H, WORLD_W, accessory, plural, type Board, type BoardSize, type Item } from '../lib/catalog'
+import { BOARD_SIZES, accessory, plural, type Board, type BoardSize, type Item } from '../lib/catalog'
 import { allHoles, holePoint, itemPlacement, placement } from '../lib/holes'
 import type { Drag } from '../hooks/useDrag'
 import { Art } from './Art'
@@ -36,12 +36,13 @@ export function BoardView({ board, index, items, selected, selectedId, drag, onG
   const target = drag?.kind === 'piece' && drag.target?.board.id === board.id ? drag.target : null
   const preview = target && drag?.kind === 'piece' ? placement(board.size, drag.type, drag.rotation, target.col, target.row) : null
   const pct = (n: number, of: number) => `${n / of * 100}%`
+  const cm = (n: number) => `calc(${n} * var(--cm))`
 
   return (
     <div
       className={`board-wrap ${selected ? 'selected-board' : ''} ${moving ? 'board-moving' : ''} ${moving?.preview.snapped ? 'board-snap' : ''}`}
       data-board-id={board.id}
-      style={{ left: pct(x, WORLD_W), top: pct(y, WORLD_H), width: pct(bw, WORLD_W), height: pct(bh, WORLD_H) }}
+      style={{ left: cm(x), top: cm(y), width: cm(bw), height: cm(bh) }}
       onPointerDown={event => { if (!(event.target as Element).closest('.board-item')) onGripDown(event, board.id) }}
     >
       <button className="board-grip" type="button" data-grip={board.id} aria-label={`Drag board ${index + 1} to move it`}>

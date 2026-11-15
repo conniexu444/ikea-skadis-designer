@@ -45,9 +45,8 @@ export const FILTERS: { id: AccessoryGroup | 'all'; label: string }[] = [
 
 export const BOARD_SIZES: Record<BoardSize, [number, number]> = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] }
 export const FINISHES: Finish[] = ['white', 'black', 'wood']
-/** The wall area boards can be arranged on, in cm. */
-export const WORLD_W = 170
-export const WORLD_H = 82
+/** Boards sit on an open canvas; this only bounds coordinates read from untrusted saved/shared data, in cm. */
+export const CANVAS_LIMIT = 5000
 
 export function accessory(type: string): Accessory | undefined {
   return ACCESSORIES.find(item => item.id === type)

@@ -10,7 +10,7 @@ An unofficial, browser-based planner for arranging two IKEA SKÅDIS pegboards an
 - Place **Wall mounts** on the holes that hold each board to the wall; those holes are then unavailable for accessories.
 - Drag accessories onto either board, move them between boards, or use the **+** buttons to add them. While dragging, the target holes turn blue when free and red when taken.
 - Rotate, duplicate, remove, and nudge accessories; use Undo and Redo while editing.
-- Pinch the trackpad over the boards to zoom (pinch in to zoom out, spread to zoom in); scroll or drag the empty wall to pan. The **%** button fits the boards back into view.
+- Pinch the trackpad over the boards to zoom (pinch in to zoom out, spread to zoom in); scroll or drag the empty canvas to pan; boards can go anywhere on it. The **%** button fits the boards back into view.
 - Save layouts automatically in the browser, copy a layout link, and download a PNG.
 
 ## Run locally
