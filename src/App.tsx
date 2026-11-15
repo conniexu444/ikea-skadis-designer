@@ -58,7 +58,7 @@ export default function App() {
       }
       if (event.key === 'Escape') { planner.clearSelection(); return }
       if (planner.groupSelection) {
-        if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); planner.removeGroup(); return }
+        if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); if (target.matches('button')) (target as HTMLElement).blur(); planner.removeGroup(); return }
         if (arrow) {
           event.preventDefault()
           const dc = arrow[0] * 2 * (event.shiftKey ? 3 : 1), dr = arrow[1] * 2 * (event.shiftKey ? 3 : 1)
@@ -66,8 +66,13 @@ export default function App() {
         }
         return
       }
-      if (!planner.selectedItem) return
-      if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); planner.removeSelected(); return }
+      const remove = event.key === 'Delete' || event.key === 'Backspace'
+      if (remove && target.matches('button')) (target as HTMLElement).blur()
+      if (!planner.selectedItem) {
+        if (remove && planner.boardHighlighted) { event.preventDefault(); planner.removeBoard() }
+        return
+      }
+      if (remove) { event.preventDefault(); planner.removeSelected(); return }
       if (arrow) { event.preventDefault(); planner.nudgeSelected(arrow, event.shiftKey ? 3 : 1) }
     }
     window.addEventListener('hashchange', onHashChange)
