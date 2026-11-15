@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Layout } from './catalog'
 import { usedHoles } from './holes'
-import { DEFAULT_LAYOUT, refitItems, sanitizeLayout, snapBoard } from './layout'
+import type { Board } from './catalog'
+import { DEFAULT_LAYOUT, boardRectOverlaps, freeBoardSpot, refitItems, sanitizeLayout, separateBoards, snapBoard } from './layout'
 
 describe('sanitizeLayout', () => {
   it('keeps the default layout as is', () => {
@@ -69,5 +70,35 @@ describe('snapBoard', () => {
   it('leaves a far-away board where it was dropped', () => {
     const [a, b] = DEFAULT_LAYOUT.boards
     expect(snapBoard(DEFAULT_LAYOUT.boards, b, a.x + 56 + 20, a.y)).toMatchObject({ x: a.x + 76, snapped: false })
+  })
+})
+
+describe('more than two boards', () => {
+  const board = (id: string, x: number, y: number): Board => ({ id, size: '56x56', color: 'white', x, y })
+  const noOverlaps = (boards: Board[]) => boards.every((a, i) => boards.slice(i + 1).every(b => !boardRectOverlaps(a, b)))
+
+  it('keeps every board from a saved layout', () => {
+    const boards = [board('a', 0, 0), board('b', 60, 0), board('c', 0, 60)]
+    expect(sanitizeLayout({ name: 'x', boards, items: [] })!.boards).toHaveLength(3)
+  })
+
+  it('pushes overlapping boards apart', () => {
+    const boards = [board('a', 0, 0), board('b', 10, 0), board('c', 20, 5)]
+    separateBoards(boards)
+    expect(boards[0].x).toBe(0)
+    expect(noOverlaps(boards)).toBe(true)
+  })
+
+  it('finds a free spot next to a board, skipping taken sides', () => {
+    const a = board('a', 0, 0)
+    expect(freeBoardSpot([a], '56x56', a)).toEqual({ x: 62, y: 0 })
+    const b = board('b', 62, 0)
+    expect(freeBoardSpot([a, b], '56x56', a)).toEqual({ x: 0, y: 62 })
+  })
+
+  it('snaps to whichever board is close and never onto another', () => {
+    const boards = [board('a', 0, 0), board('b', 56, 0), board('c', 200, 200)]
+    expect(snapBoard(boards, boards[2], 3, 59)).toEqual({ x: 0, y: 56, snapped: true })
+    expect(snapBoard(boards, boards[2], 60, 58)).toEqual({ x: 56, y: 56, snapped: true })
   })
 })

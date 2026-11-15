@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { accessory } from './lib/catalog'
 import { downloadPng } from './lib/exportPng'
-import { boardRectOverlaps, shareLink, sharedLayout } from './lib/layout'
+import { overlapsAny, shareLink, sharedLayout } from './lib/layout'
 import { useCamera } from './hooks/useCamera'
 import { useDrag } from './hooks/useDrag'
 import { useLatest } from './hooks/useLatest'
@@ -39,13 +39,18 @@ export default function App() {
         else planner.undo()
         return
       }
+      if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey) {
+        const key = event.key.toLowerCase()
+        if (key === 'c' && !window.getSelection()?.toString() && planner.copySelection()) event.preventDefault()
+        if (key === 'v') { event.preventDefault(); planner.paste() }
+        if (key === 'c' || key === 'v') return
+      }
       const arrow = ARROWS[event.key], grip = target.closest<HTMLElement>('.board-grip')
       if (grip && arrow) {
         event.preventDefault()
         const board = planner.layout.boards.find(entry => entry.id === grip.dataset.grip)!, step = event.shiftKey ? 5 : 1
         const x = board.x + arrow[0] * step, y = board.y + arrow[1] * step
-        const other = planner.layout.boards.find(entry => entry.id !== board.id)
-        if (!other || !boardRectOverlaps({ ...board, x, y }, other)) planner.moveBoard(board.id, x, y)
+        if (!overlapsAny(planner.layout.boards, { ...board, x, y })) planner.moveBoard(board.id, x, y)
         return
       }
       if (event.key === 'Escape') { planner.clearSelection(); return }

@@ -27,15 +27,20 @@ export function useDrag(planner: Planner, pxPerCm: number) {
 
   function dropTarget(clientX: number, clientY: number, piece: Pick<PieceDrag, 'type' | 'rotation' | 'id' | 'w' | 'h'>): DropTarget | null {
     const { layout } = latest.current.planner
+    let best: { target: DropTarget; inside: boolean } | null = null
     for (const board of layout.boards) {
       const rect = document.querySelector(`[data-board-id="${board.id}"] .board-items`)?.getBoundingClientRect()
-      if (!rect || clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue
-      const [bw, bh] = BOARD_SIZES[board.size]
+      if (!rect) continue
+      const [bw, bh] = BOARD_SIZES[board.size], reachX = piece.w / 2 * rect.width / bw, reachY = piece.h / 2 * rect.height / bh
+      // A piece can hang off the board, so it still targets the board while its pegs could reach a hole.
+      if (clientX < rect.left - reachX || clientX > rect.right + reachX || clientY < rect.top - reachY || clientY > rect.bottom + reachY) continue
+      const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+      if (best && (best.inside || !inside)) continue
       const x = (clientX - rect.left) / rect.width * bw - piece.w / 2, y = (clientY - rect.top) / rect.height * bh - piece.h / 2
       const [col, row] = anchorFor(board.size, piece.type, piece.rotation, x, y)
-      return { board, col, row, issue: placementIssue(board, piece.type, piece.rotation, col, row, usedHoles(layout.items, board, piece.id)) }
+      best = { inside, target: { board, col, row, issue: placementIssue(board, piece.type, piece.rotation, col, row, usedHoles(layout.items, board, piece.id)) } }
     }
-    return null
+    return best?.target ?? null
   }
 
   function startPieceDrag(event: ReactPointerEvent, type: AccessoryId, id: string | null = null) {
