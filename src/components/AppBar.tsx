@@ -12,9 +12,9 @@ interface Props {
 export function AppBar({ name, saveFailed, canUndo, canRedo, onRename, onUndo, onRedo, onDownload }: Props) {
   return (
     <header className="appbar">
-      <a className="brand" href="./" aria-label="SKÅDIS Studio home">
+      <a className="brand" href="./" aria-label="Pegboard Designer home">
         <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /><i /></span>
-        <span className="brand-name">SKÅDIS <span>Studio</span></span>
+        <span className="brand-name">Pegboard <span>Designer</span></span>
       </a>
       <div className="layout-meta">
         <label className="visually-hidden" htmlFor="projectName">Layout name</label>

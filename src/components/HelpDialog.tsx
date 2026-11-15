@@ -14,7 +14,7 @@ export function HelpDialog({ open, onClose }: { open: boolean; onClose: () => vo
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       </button>
       <h2>Plan it before you drill.</h2>
-      <p className="dialog-lead">SKÅDIS Studio lays out real SKÅDIS hole grids so you can see exactly what fits.</p>
+      <p className="dialog-lead">Pegboard Designer lays out real SKÅDIS hole grids so you can see exactly what fits.</p>
       <ol>
         <li><b>Arrange your boards.</b> Drag a board anywhere a piece isn’t; edges snap together when they get close.</li>
         <li><b>Mount them.</b> Put wall mounts on the holes that will hold each board to the wall.</li>
