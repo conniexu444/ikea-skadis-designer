@@ -4,6 +4,7 @@
   --surface-2: #faf9f6;
   --line: #e7e3db;
   --line-strong: #d6d0c4;
+  --divider: #c2185b;
   --ink: #1d232b;
   --ink-2: #4a525c;
   --muted: #858a8f;
@@ -70,7 +71,7 @@ svg { flex: none; }
 .text-button.muted { color: var(--muted); }
 
 .workbench { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 0; }
-.sidebar { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.sidebar { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--divider); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .catalog { flex: 1; border-bottom: 0; }
 .sidebar-head, .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .count { color: var(--muted); font-size: 12px; white-space: nowrap; }
@@ -151,7 +152,7 @@ svg { flex: none; }
 .drag-ghost svg { width: 100%; height: 100%; }
 
 /* Inspector */
-.panel { padding: 20px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+.panel { padding: 20px; border-bottom: 1px solid var(--divider); display: flex; flex-direction: column; gap: 14px; }
 .panel-collapse { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .25s ease, margin-top .25s ease, opacity .2s ease; }
 .collapsed .panel-collapse { grid-template-rows: 0fr; margin-top: -14px; opacity: 0; }
 .panel-body { display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow: hidden; margin: -4px; padding: 4px; }
@@ -189,7 +190,7 @@ svg { flex: none; }
 .swatch.white { background: #f6f6f3; }
 .swatch.black { background: #34393c; }
 .swatch.wood { background: #c9a277; }
-.disclaimer { margin: 0; padding: 16px 20px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.5; }
+.disclaimer { margin: 0; padding: 16px 20px 20px; border-top: 1px solid var(--divider); color: var(--muted); font-size: 12px; line-height: 1.5; }
 .disclaimer a { color: var(--ink-2); text-underline-offset: 2px; }
 
 /* Toast & dialog */
@@ -226,7 +227,7 @@ svg { flex: none; }
     .appbar-actions { margin-left: auto; }
   .button { width: 36px; padding: 0; }
   .workbench { grid-template-columns: 1fr; }
-  .stage { grid-row: 1; height: 420px; border-bottom: 1px solid var(--line); }
+  .stage { grid-row: 1; height: 420px; border-bottom: 1px solid var(--divider); }
   .sidebar { overflow: visible; border-right: 0; }
   .stage-hints { display: none; }
   .selection-bar { bottom: 12px; }
