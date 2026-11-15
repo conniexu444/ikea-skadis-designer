@@ -135,10 +135,6 @@ export function usePlanner() {
     setSelectedId(null)
     notify('Accessories cleared — use Undo to bring them back')
   }
-  function rename(name: string) {
-    const next = name.trim() || 'My perfect setup'
-    if (next !== layout.name) commit(draft => { draft.name = next.slice(0, 60) })
-  }
 
   function changeSize(size: BoardSize) {
     if (size === currentBoard.size) return
@@ -216,7 +212,7 @@ export function usePlanner() {
     layout, firstVisit, saveFailed, toast, notify,
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
     selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
-    addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems, rename,
+    addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems,
     changeSize, changeColor, addBoard, removeBoard, moveBoard, copySelection, paste,
   }
 }

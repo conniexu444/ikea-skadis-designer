@@ -1,15 +1,13 @@
 interface Props {
-  name: string
   saveFailed: boolean
   canUndo: boolean
   canRedo: boolean
-  onRename: (name: string) => void
   onUndo: () => void
   onRedo: () => void
   onDownload: () => void
 }
 
-export function AppBar({ name, saveFailed, canUndo, canRedo, onRename, onUndo, onRedo, onDownload }: Props) {
+export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownload }: Props) {
   return (
     <header className="appbar">
       <a className="brand" href="./" aria-label="Pegboard Designer home">
@@ -17,13 +15,6 @@ export function AppBar({ name, saveFailed, canUndo, canRedo, onRename, onUndo, o
         <span className="brand-name">Pegboard <span>Designer</span></span>
       </a>
       <div className="layout-meta">
-        <label className="visually-hidden" htmlFor="projectName">Layout name</label>
-        {/* Keyed by name so undo/redo resets the field; edits commit on blur or Enter. */}
-        <input
-          key={name} id="projectName" className="name-input" type="text" maxLength={60} defaultValue={name} spellCheck={false}
-          onBlur={event => onRename(event.target.value)}
-          onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur() }}
-        />
         {saveFailed && <span className="save-status" role="status">Storage unavailable — download your layout</span>}
       </div>
       <div className="appbar-actions">

@@ -77,8 +77,8 @@ export default function App() {
     <>
       <div className="app">
         <AppBar
-          name={planner.layout.name} saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
-          onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onDownload={download}
+          saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
+          onUndo={planner.undo} onRedo={planner.redo} onDownload={download}
         />
         <div className="sponsor-banner" role="note" aria-label={BANNER_MESSAGE}>
           <div className="sponsor-track" aria-hidden="true">
