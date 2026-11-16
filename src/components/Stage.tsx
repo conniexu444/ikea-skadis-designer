@@ -118,7 +118,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
           />
         )}
       </div>
-      <div className="stage-corner">
       {selectedItem && colorable?.colors && (
         <div className="color-panel" role="group" aria-label={`${colorable.name} color`} onPointerDown={event => event.stopPropagation()}>
           <span className="color-panel-title">{colorable.name} color</span>
@@ -135,6 +134,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
           </div>
         </div>
       )}
+      <div className="stage-corner">
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
         <span><b>Drag</b> the canvas to select an area</span>
