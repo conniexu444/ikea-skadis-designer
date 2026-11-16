@@ -42,6 +42,13 @@ describe('hole occupancy', () => {
     expect(placementIssue(board, 'wall-mount', 0, 4, 4, usedHoles([mount], board, 'm'))).toBeNull()
   })
 
+  it('puts a hook on two holes in the same column, one above the other', () => {
+    expect(placement(board.size, 'hook', 0, 4, 6).holes).toEqual([[4, 6], [4, 8]])
+    expect(placementIssue(board, 'hook', 0, 4, 2, usedHoles([mount], board))).toBe('taken')
+    expect(placementIssue(board, 'hook', 0, 4, 6, usedHoles([mount], board))).toBeNull()
+    expect(placementIssue(board, 'hook', 0, 4, 26, new Set())).toBe('edge')
+  })
+
   it('refuses pegs that miss a hole', () => {
     expect(placementIssue(board, 'wall-mount', 0, 1, 0, new Set())).toBe('edge')
   })
