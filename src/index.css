@@ -113,8 +113,8 @@ svg { flex: none; }
 .text-button:hover:not(:disabled) { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
 .text-button.muted { color: var(--muted); }
 
-.workbench { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 0; }
-.sidebar { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--divider); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.workbench { display: grid; grid-template-columns: 340px minmax(0, 1fr); min-height: 0; background: var(--surface); }
+.sidebar { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; border-right: 1px solid var(--divider); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .catalog { flex: 1; border-bottom: 0; }
 .sidebar-head, .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 
