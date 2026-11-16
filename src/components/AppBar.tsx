@@ -1,6 +1,25 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 
 const BRAND_WORDS = ['Pegboard', 'Designer']
+const THEME_KEY = 'pegboard-theme'
+const THEME_FADE_MS = 500
+let fadeTimer: ReturnType<typeof setTimeout> | undefined
+
+function useTheme() {
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark')
+  function toggle() {
+    const next = dark ? 'light' : 'dark', root = document.documentElement
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('theme-fading')
+      clearTimeout(fadeTimer)
+      fadeTimer = setTimeout(() => root.classList.remove('theme-fading'), THEME_FADE_MS)
+    }
+    root.dataset.theme = next
+    try { localStorage.setItem(THEME_KEY, next) } catch { /* storage unavailable */ }
+    setDark(!dark)
+  }
+  return [dark, toggle] as const
+}
 
 interface Props {
   saveFailed: boolean
@@ -12,6 +31,7 @@ interface Props {
 }
 
 export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownload }: Props) {
+  const [dark, toggleTheme] = useTheme()
   return (
     <header className="appbar">
       <div className="brand">
@@ -33,6 +53,12 @@ export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownloa
         {saveFailed && <span className="save-status" role="status">Storage unavailable — download your layout</span>}
       </div>
       <div className="appbar-actions">
+        <button
+          type="button" role="switch" className="theme-switch" aria-checked={dark} aria-label="Dark mode"
+          title={dark ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleTheme}
+        >
+          <span className="theme-switch-knob" aria-hidden="true" />
+        </button>
         <div className="button-group" role="group" aria-label="History">
           <button type="button" className="icon-button" title="Undo (Ctrl+Z)" aria-label="Undo" disabled={!canUndo} onClick={onUndo}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5" /><path d="M4 12h11a5 5 0 0 1 0 10h-3" /></svg>

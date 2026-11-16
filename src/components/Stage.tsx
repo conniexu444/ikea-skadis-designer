@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
-import { accessory, plural } from '../lib/catalog'
 import { areaSelection } from '../lib/layout'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
 import type { Planner } from '../hooks/usePlanner'
-import { Art } from './Art'
 import { BoardView } from './BoardView'
 
 interface Props {
@@ -91,12 +89,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
   }
 
   const { scale, x, y } = camera.camera
-  const selected = selectedItem ? accessory(selectedItem.type)! : null
-  const group = planner.groupSelection
-  const groupLabel = group && [
-    group.boardIds.length ? plural(group.boardIds.length, 'board') : '',
-    group.itemIds.length ? `${group.itemIds.length} ${group.itemIds.length === 1 ? 'accessory' : 'accessories'}` : '',
-  ].filter(Boolean).join(', ')
   return (
     <section className="stage" aria-label="Board arrangement">
       <div
@@ -112,6 +104,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
                 selected={planner.highlightedBoardIds.has(board.id)} selectedIds={planner.selectedItemIds} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
+                rotatableId={selectedItem && !drag ? selectedItem.id : null} onRotate={planner.rotateSelected}
               />
             ))}
           </div>
@@ -123,26 +116,6 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
           />
         )}
       </div>
-      {group && (
-        <div className="selection-bar" role="toolbar" aria-label="Selection">
-          <span className="selection-name"><strong>{groupLabel}</strong><small>Drag any of them to move together</small></span>
-          <span className="selection-actions">
-            <button type="button" onClick={planner.duplicateGroup}>⧉ Copy</button>
-            <button type="button" data-action="remove" onClick={planner.removeGroup}>× Remove</button>
-          </span>
-        </div>
-      )}
-      {selected && (
-        <div className="selection-bar" role="toolbar" aria-label="Selected piece">
-          <span className="mini-art"><Art type={selected.id} /></span>
-          <span className="selection-name"><strong>{selected.name}</strong></span>
-          <span className="selection-actions">
-            <button type="button" onClick={planner.rotateSelected}>↻ Rotate</button>
-            <button type="button" onClick={planner.duplicateSelected}>⧉ Copy</button>
-            <button type="button" data-action="remove" onClick={planner.removeSelected}>× Remove</button>
-          </span>
-        </div>
-      )}
       <div className="stage-corner">
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>

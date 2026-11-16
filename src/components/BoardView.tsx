@@ -27,9 +27,12 @@ interface Props {
   drag: Drag | null
   onGripDown: (event: PointerEvent, boardId: string) => void
   onItemDown: (event: PointerEvent, item: Item) => void
+  /** Piece that shows the floating rotate button. */
+  rotatableId: string | null
+  onRotate: () => void
 }
 
-export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown }: Props) {
+export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown, rotatableId, onRotate }: Props) {
   const [bw, bh] = BOARD_SIZES[board.size]
   const moving = drag?.kind === 'board' && drag.id === board.id ? drag : null
   const group = drag?.kind === 'group' && drag.moved ? drag : null
@@ -47,7 +50,7 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
       className={`board-wrap ${selected ? 'selected-board' : ''} ${moving || groupBoard ? 'board-moving' : ''} ${moving?.preview.snapped ? 'board-snap' : ''}`}
       data-board-id={board.id}
       style={{ left: cm(x), top: cm(y), width: cm(bw), height: cm(bh) }}
-      onPointerDown={event => { if (!(event.target as Element).closest('.board-item')) onGripDown(event, board.id) }}
+      onPointerDown={event => { if (!(event.target as Element).closest('.board-item, .rotate-handle')) onGripDown(event, board.id) }}
     >
       <button className="board-grip" type="button" data-grip={board.id} aria-label={`Drag board ${index + 1} to move it`}>
         <span className="grip-dots" aria-hidden="true">⠿</span> Board {index + 1}
@@ -71,6 +74,18 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
                   ? { position: 'absolute', left: '50%', top: '50%', width: pct(a.w, w), height: pct(a.h, h), transform: 'translate(-50%,-50%) rotate(90deg)' }
                   : undefined} />
               </div>
+            )
+          })}
+          {items.filter(item => item.id === rotatableId).map(item => {
+            const [ix, iy, w, h] = itemPlacement(item, board.size).rect
+            return (
+              <button
+                key={item.id} type="button" className="rotate-handle" title="Rotate" aria-label={`Rotate ${accessory(item.type)!.name}`}
+                style={{ left: pct(ix + w / 2, bw), top: pct(iy + h, bh) }}
+                onPointerDown={event => event.stopPropagation()} onClick={onRotate}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><path d="M4 3v5h5" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><path d="M20 21v-5h-5" /></svg>
+              </button>
             )
           })}
         </div>
