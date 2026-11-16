@@ -31,6 +31,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
           return (
             <div key={board.id} className={`board-card ${active ? 'active' : ''}`}>
               <button className="board-select" type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
+                <span className="board-icon" aria-hidden="true"><span className={`size-graphic ${SIZE_GRAPHIC[board.size]}`} /></span>
                 <strong>Board {i + 1}</strong>
                 <small>{board.size.replace('x', ' × ')} cm</small>
               </button>
