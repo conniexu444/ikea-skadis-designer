@@ -11,6 +11,7 @@ import { AppBar } from './components/AppBar'
 import { Art } from './components/Art'
 import { BoardsPanel } from './components/BoardsPanel'
 import { Catalog } from './components/Catalog'
+import { CustomAccessories } from './components/CustomAccessories'
 import { HowTo } from './components/HowTo'
 import { HelpDialog } from './components/HelpDialog'
 import { Stage } from './components/Stage'
@@ -104,6 +105,7 @@ export default function App() {
           <aside className="sidebar" aria-label="Boards and accessories">
             <BoardsPanel planner={planner} />
             <Catalog onAdd={type => planner.addAccessory(type)} onStartDrag={(event, type) => startPieceDrag(event, type)} />
+            <CustomAccessories planner={planner} onStartDrag={(event, type) => startPieceDrag(event, type)} />
             <HowTo />
           </aside>
           <Stage planner={planner} camera={camera} viewportRef={viewportRef} drag={drag} startPieceDrag={startPieceDrag} startBoardDrag={startBoardDrag} />

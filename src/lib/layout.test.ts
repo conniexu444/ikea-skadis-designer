@@ -154,3 +154,34 @@ describe('groupPasteOffset', () => {
     expect(boards.some(copy => boards.some(other => boardRectOverlaps({ ...copy, id: 'x', x: copy.x + ox, y: copy.y + oy }, other)))).toBe(false)
   })
 })
+
+describe('custom accessories', () => {
+  const shelf = { id: 'custom-shelf', name: 'Shelf', w: 8, h: 4, pegs: [[0, 0], [4, 0]], top: 1, left: 2, fixed: true, colors: ['white', 'gray'], detail: '' }
+
+  it('keeps valid custom pieces and reserves every hole they clip into', () => {
+    const layout = sanitizeLayout({
+      ...DEFAULT_LAYOUT,
+      custom: [shelf],
+      items: [
+        { id: 'a', boardId: DEFAULT_LAYOUT.boards[0].id, type: 'custom-shelf', col: 2, row: 2, rotation: 0 },
+        { id: 'b', boardId: DEFAULT_LAYOUT.boards[0].id, type: 'button', col: 4, row: 2, rotation: 0 },
+      ],
+    })!
+    expect(layout.custom).toHaveLength(1)
+    const shelfItem = layout.items.find(item => item.id === 'a')!
+    expect([shelfItem.col, shelfItem.row]).toEqual([2, 2])
+    const button = layout.items.find(item => item.id === 'b')!
+    expect([button.col, button.row]).not.toEqual([4, 2])
+    expect(usedHoles(layout.items, layout.boards[0]).size).toBe(3)
+  })
+
+  it('drops custom pieces whose pegs are off the staggered grid, and their items', () => {
+    const layout = sanitizeLayout({
+      ...DEFAULT_LAYOUT,
+      custom: [{ ...shelf, pegs: [[0, 0], [2, 0]] }],
+      items: [{ id: 'a', boardId: DEFAULT_LAYOUT.boards[0].id, type: 'custom-shelf', col: 2, row: 2, rotation: 0 }],
+    })!
+    expect(layout.custom).toBeUndefined()
+    expect(layout.items).toHaveLength(0)
+  })
+})

@@ -50,7 +50,7 @@ export function allHoles(size: BoardSize): Hole[] {
 export function geometry(type: string, rotation: Rotation = 0) {
   const a = accessory(type)!
   const xs = a.pegs.map(peg => peg[0]), ys = a.pegs.map(peg => peg[1])
-  const ox = (Math.min(...xs) + Math.max(...xs)) / 2 - a.w / 2, oy = Math.min(...ys) - (a.top ?? 1.5)
+  const ox = a.left === undefined ? (Math.min(...xs) + Math.max(...xs)) / 2 - a.w / 2 : Math.min(...xs) - a.left, oy = Math.min(...ys) - (a.top ?? 1.5)
   const pegs = a.pegs.map(([x, y]) => (rotation === 90 ? [-y, x] : [x, y]) as [number, number])
   const rect: [number, number, number, number] = rotation === 90 ? [-(oy + a.h), ox, a.h, a.w] : [ox, oy, a.w, a.h]
   return { pegs, rect }
