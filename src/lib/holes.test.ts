@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Board, Item } from './catalog'
-import { allHoles, findSpot, holeExists, placement, placementIssue, usedHoles } from './holes'
+import { allHoles, findSpot, holeExists, holePoint, placement, placementIssue, usedHoles } from './holes'
 
 const rowCounts = (size: Board['size']) => {
   const rows = new Map<number, number>()
@@ -40,6 +40,25 @@ describe('hole occupancy', () => {
 
   it('ignores the piece being moved', () => {
     expect(placementIssue(board, 'wall-mount', 0, 4, 4, usedHoles([mount], board, 'm'))).toBeNull()
+  })
+
+  it('puts a hook on two holes in the same column, one above the other', () => {
+    expect(placement(board.size, 'hook', 0, 4, 6).holes).toEqual([[4, 6], [4, 8]])
+    expect(placementIssue(board, 'hook', 0, 4, 2, usedHoles([mount], board))).toBe('taken')
+    expect(placementIssue(board, 'hook', 0, 4, 6, usedHoles([mount], board))).toBeNull()
+    expect(placementIssue(board, 'hook', 0, 4, 26, new Set())).toBe('edge')
+  })
+
+  it('keeps a long hook on the same two stacked holes without reaching below them', () => {
+    const long = placement(board.size, 'long-hook', 0, 4, 6), hook = placement(board.size, 'hook', 0, 4, 6)
+    expect(long.holes).toEqual(hook.holes)
+    expect(long.rect[1] + long.rect[3]).toBeLessThan(hook.rect[1] + hook.rect[3])
+  })
+
+  it('centers a button on the single hole it uses', () => {
+    const { holes, rect } = placement(board.size, 'button', 0, 4, 6), [hx, hy] = holePoint(board.size, 4, 6)
+    expect(holes).toEqual([[4, 6]])
+    expect([rect[0] + rect[2] / 2, rect[1] + rect[3] / 2]).toEqual([hx, hy])
   })
 
   it('refuses pegs that miss a hole', () => {

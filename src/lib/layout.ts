@@ -1,4 +1,4 @@
-import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout } from './catalog'
+import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from './catalog'
 import { HOLE_PITCH, anchorFor, findSpot, holePoint, itemPlacement, nearestHole, placementIssue, usedHoles } from './holes'
 
 export const STORAGE_KEY = 'skadis-studio-v3'
@@ -80,7 +80,7 @@ export function sanitizeLayout(input: any): Layout | null {
   input.items.slice(0, 200).forEach((item: any, i: number) => {
     const a = accessory(item?.type)
     if (!a) return
-    const rotation = Number(item.rotation) === 90 ? 90 : 0
+    const rotation = !a.fixed && Number(item.rotation) === 90 ? 90 : 0
     // oxlint-disable-next-line typescript/no-explicit-any
     const boardIndex = Array.isArray(input.boards) ? input.boards.findIndex((board: any) => board?.id === item.boardId) : 0
     const board = boards[Math.max(0, Math.min(boardIndex, boards.length - 1))]
@@ -91,7 +91,7 @@ export function sanitizeLayout(input: any): Layout | null {
       if (!spot) return
       ;[col, row] = spot
     }
-    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation })
+    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation, ...(a.colors?.includes(item.color) ? { color: item.color as PieceColor } : {}) })
   })
   return { name: String(input.name || 'My perfect setup').slice(0, 60), boards, items }
 }

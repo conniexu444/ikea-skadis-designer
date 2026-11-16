@@ -5,11 +5,6 @@ import { holeDelta, snapBoard } from '../lib/layout'
 import type { Planner } from './usePlanner'
 import { useLatest } from './useLatest'
 
-const ISSUE_MESSAGES: Record<PlacementIssue, string> = {
-  taken: 'Those holes are already in use — each hole can only hold one thing',
-  edge: 'That piece doesn’t fit there on the board',
-}
-
 export interface DropTarget { board: Board; col: number; row: number; issue: PlacementIssue | null }
 export interface PieceDrag {
   kind: 'piece'; type: AccessoryId; id: string | null; rotation: Rotation
@@ -110,12 +105,12 @@ export function useDrag(planner: Planner, pxPerCm: number) {
         return
       }
       if (drag.kind === 'board') {
-        if (drag.moved && !planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)) planner.notify('Boards cannot overlap — drag near an edge to snap them together')
+        if (drag.moved) planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)
         return
       }
       const target = dropTarget(event.clientX, event.clientY, drag)
       if (!target) return
-      if (target.issue) { planner.notify(ISSUE_MESSAGES[target.issue]); return }
+      if (target.issue) return
       if (drag.id) planner.moveItem(drag.id, target.board.id, target.col, target.row)
       else planner.addAccessory(drag.type, [target.col, target.row], target.board.id)
     }

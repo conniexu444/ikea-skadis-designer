@@ -28,11 +28,11 @@ interface Props {
   onGripDown: (event: PointerEvent, boardId: string) => void
   onItemDown: (event: PointerEvent, item: Item) => void
   /** Piece that shows the floating rotate button. */
-  rotatableId: string | null
+  toolsId: string | null
   onRotate: () => void
 }
 
-export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown, rotatableId, onRotate }: Props) {
+export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown, toolsId, onRotate }: Props) {
   const [bw, bh] = BOARD_SIZES[board.size]
   const moving = drag?.kind === 'board' && drag.id === board.id ? drag : null
   const group = drag?.kind === 'group' && drag.moved ? drag : null
@@ -70,19 +70,18 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
                 style={{ left: pct(ix, bw), top: pct(iy, bh), width: pct(w, bw), height: pct(h, bh), transform: shifting(item) ? `translate(${cm(group!.dc * HOLE_PITCH)}, ${cm(group!.dr * HOLE_PITCH)})` : undefined }}
                 onPointerDown={event => onItemDown(event, item)}
               >
-                <Art type={item.type} style={item.rotation === 90
+                <Art type={item.type} color={item.color} style={item.rotation === 90
                   ? { position: 'absolute', left: '50%', top: '50%', width: pct(a.w, w), height: pct(a.h, h), transform: 'translate(-50%,-50%) rotate(90deg)' }
                   : undefined} />
               </div>
             )
           })}
-          {items.filter(item => item.id === rotatableId).map(item => {
-            const [ix, iy, w, h] = itemPlacement(item, board.size).rect
+          {items.filter(item => item.id === toolsId && !accessory(item.type)!.fixed).map(item => {
+            const a = accessory(item.type)!, [ix, iy, w, h] = itemPlacement(item, board.size).rect
             return (
               <button
-                key={item.id} type="button" className="rotate-handle" title="Rotate" aria-label={`Rotate ${accessory(item.type)!.name}`}
-                style={{ left: pct(ix + w / 2, bw), top: pct(iy + h, bh) }}
-                onPointerDown={event => event.stopPropagation()} onClick={onRotate}
+                key={item.id} type="button" className="rotate-handle" title="Rotate" aria-label={`Rotate ${a.name}`}
+                style={{ left: pct(ix + w / 2, bw), top: pct(iy + h, bh) }} onPointerDown={event => event.stopPropagation()} onClick={onRotate}
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><path d="M4 3v5h5" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><path d="M20 21v-5h-5" /></svg>
               </button>
@@ -90,9 +89,6 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
           })}
         </div>
         <SvgLayer size={board.size} className="board-pegs">
-          {items.filter(item => item.type !== 'wall-mount' && !shifting(item)).flatMap(item => itemPlacement(item, board.size).holes.map(([col, row]) => (
-            <Slot key={`${item.id}-${col},${row}`} size={board.size} col={col} row={row} className={`peg ${selectedIds.has(item.id) ? 'active' : ''}`} />
-          )))}
           {preview && target && (
             <g className={`peg-preview ${target.issue ? 'blocked' : 'open'}`}>
               <rect className="preview-body" x={preview.rect[0]} y={preview.rect[1]} width={preview.rect[2]} height={preview.rect[3]} rx={0.6} vectorEffect="non-scaling-stroke" />

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
+import { COLOR_NAMES, accessory, pieceColor } from '../lib/catalog'
 import { areaSelection } from '../lib/layout'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
@@ -18,6 +19,11 @@ const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+'
 
 export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startBoardDrag }: Props) {
   const { layout, selectedItem } = planner
+  const colorItem = selectedItem && !drag && accessory(selectedItem.type)!.colors ? selectedItem : null
+  /** Last piece shown in the color panel, kept so the panel can fade out after deselecting. */
+  const [shownColorItem, setShownColorItem] = useState(colorItem)
+  if (colorItem && (colorItem.id !== shownColorItem?.id || colorItem.color !== shownColorItem.color)) setShownColorItem(colorItem)
+  const colorable = shownColorItem && accessory(shownColorItem.type)!
   const pan = useRef<{ id: number; x: number; y: number } | null>(null)
   const [panning, setPanning] = useState(false)
   const [spaceHeld, setSpaceHeld] = useState(false)
@@ -104,7 +110,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
                 selected={planner.highlightedBoardIds.has(board.id)} selectedIds={planner.selectedItemIds} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
-                rotatableId={selectedItem && !drag ? selectedItem.id : null} onRotate={planner.rotateSelected}
+                toolsId={selectedItem && !drag ? selectedItem.id : null} onRotate={planner.rotateSelected}
               />
             ))}
           </div>
@@ -116,6 +122,25 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
           />
         )}
       </div>
+      {shownColorItem && colorable?.colors && (
+        <div
+          className={`color-panel ${colorItem ? 'open' : ''}`} role="group" aria-label={`${colorable.name} color`} inert={!colorItem}
+          onPointerDown={event => event.stopPropagation()}
+        >
+          <span className="color-panel-title">{colorable.name} color</span>
+          <div className="color-options">
+            {colorable.colors.map(color => (
+              <button
+                key={color} type="button" className="color-option" aria-pressed={color === pieceColor(shownColorItem.type, shownColorItem.color)}
+                onClick={() => planner.colorSelected(color)}
+              >
+                <span className={`color-swatch swatch-${color}`} aria-hidden="true" />
+                {COLOR_NAMES[color]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="stage-corner">
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
