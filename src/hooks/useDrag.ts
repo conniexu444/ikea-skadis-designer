@@ -110,7 +110,7 @@ export function useDrag(planner: Planner, pxPerCm: number) {
         return
       }
       if (drag.kind === 'board') {
-        if (drag.moved && !planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)) planner.notify('Boards cannot overlap — drag near an edge to snap them together')
+        if (drag.moved) planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)
         return
       }
       const target = dropTarget(event.clientX, event.clientY, drag)

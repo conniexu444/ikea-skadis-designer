@@ -237,9 +237,7 @@ export function usePlanner() {
     const loose = new Set(layout.items.filter(item => groupSelection.itemIds.includes(item.id) && !boardIds.has(item.boardId)).map(item => item.id))
     const movedBoards = layout.boards.filter(board => boardIds.has(board.id)).map(board => ({ ...board, x: board.x + dx, y: board.y + dy }))
     const staying = layout.boards.filter(board => !boardIds.has(board.id))
-    if (movedBoards.some(board => staying.some(other => boardRectOverlaps(board, other)))) {
-      notify('Boards cannot overlap — move the selection somewhere free'); return false
-    }
+    if (movedBoards.some(board => staying.some(other => boardRectOverlaps(board, other)))) return false
     const fixed = layout.items.filter(item => !loose.has(item.id)), movedItems: Item[] = []
     for (const item of layout.items.filter(entry => loose.has(entry.id))) {
       const board = layout.boards.find(entry => entry.id === item.boardId)!, next = { ...item, col: item.col + dc, row: item.row + dr }
