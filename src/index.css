@@ -29,7 +29,7 @@
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #19161b;
+  --bg: #141414;
   --surface: #221e25;
   --surface-2: #2b2630;
   --line: #3b3440;
@@ -40,11 +40,11 @@
   --accent-ink: #ff8ac4;
   --accent-soft: #4a2239;
   --wall: #2f2a33;
-  --canvas: #141215;
+  --canvas: #141414;
   --shadow-sm: 0 1px 2px #00000066;
   --shadow-md: 0 6px 20px #00000080, 0 1px 3px #00000066;
   --row-hover: #33202c;
-  --on-ink: #19161b;
+  --on-ink: #141414;
   --hint: #a59ca9;
   --kbd-bg: #221e25d9;
   --line-hover: #645a6b;
