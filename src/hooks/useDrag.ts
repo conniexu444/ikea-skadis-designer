@@ -17,7 +17,10 @@ export interface PieceDrag {
   w: number; h: number; pxPerCm: number
   clientX: number; clientY: number; target: DropTarget | null
 }
-export interface BoardDrag { kind: 'board'; id: string; startX: number; startY: number; x: number; y: number; preview: { x: number; y: number; snapped: boolean } }
+/** A press that moves less than this is a click, so it selects the board without snapping it. */
+const DRAG_THRESHOLD_PX = 4
+
+export interface BoardDrag { kind: 'board'; id: string; startX: number; startY: number; x: number; y: number; moved: boolean; preview: { x: number; y: number; snapped: boolean } }
 /** Moving a box selection: boards shift by (dx, dy) cm, loose pieces by (dc, dr) holes. */
 export interface GroupDrag {
   kind: 'group'; startX: number; startY: number; dx: number; dy: number; dc: number; dr: number; moved: boolean
@@ -72,7 +75,7 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     const board = planner.layout.boards.find(entry => entry.id === id)
     if (!board) return
     planner.selectBoard(id)
-    setDrag({ kind: 'board', id, startX: event.clientX, startY: event.clientY, x: board.x, y: board.y, preview: { x: board.x, y: board.y, snapped: false } })
+    setDrag({ kind: 'board', id, startX: event.clientX, startY: event.clientY, x: board.x, y: board.y, moved: false, preview: { x: board.x, y: board.y, snapped: false } })
   }
 
   const dragging = drag !== null
@@ -91,9 +94,10 @@ export function useDrag(planner: Planner, pxPerCm: number) {
         setDrag({ ...drag, dx: half(dx), dy: half(dy), dc, dr, moved: drag.moved || Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 3 })
         return
       }
+      if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) <= DRAG_THRESHOLD_PX) return
       const board = planner.layout.boards.find(entry => entry.id === drag.id)!
       const preview = snapBoard(planner.layout.boards, board, drag.x + (event.clientX - drag.startX) / pxPerCm, drag.y + (event.clientY - drag.startY) / pxPerCm)
-      setDrag({ ...drag, preview })
+      setDrag({ ...drag, moved: true, preview })
     }
     const onUp = (event: PointerEvent) => {
       const { drag, planner } = latest.current
@@ -106,7 +110,7 @@ export function useDrag(planner: Planner, pxPerCm: number) {
         return
       }
       if (drag.kind === 'board') {
-        if (!planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)) planner.notify('Boards cannot overlap — drag near an edge to snap them together')
+        if (drag.moved && !planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)) planner.notify('Boards cannot overlap — drag near an edge to snap them together')
         return
       }
       const target = dropTarget(event.clientX, event.clientY, drag)
