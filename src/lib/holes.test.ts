@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Board, Item } from './catalog'
-import { allHoles, findSpot, holeExists, placement, placementIssue, usedHoles } from './holes'
+import { allHoles, findSpot, holeExists, holePoint, placement, placementIssue, usedHoles } from './holes'
 
 const rowCounts = (size: Board['size']) => {
   const rows = new Map<number, number>()
@@ -53,6 +53,12 @@ describe('hole occupancy', () => {
     const long = placement(board.size, 'long-hook', 0, 4, 6), hook = placement(board.size, 'hook', 0, 4, 6)
     expect(long.holes).toEqual(hook.holes)
     expect(long.rect[1] + long.rect[3]).toBeLessThan(hook.rect[1] + hook.rect[3])
+  })
+
+  it('centers a button on the single hole it uses', () => {
+    const { holes, rect } = placement(board.size, 'button', 0, 4, 6), [hx, hy] = holePoint(board.size, 4, 6)
+    expect(holes).toEqual([[4, 6]])
+    expect([rect[0] + rect[2] / 2, rect[1] + rect[3] / 2]).toEqual([hx, hy])
   })
 
   it('refuses pegs that miss a hole', () => {
