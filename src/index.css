@@ -192,6 +192,7 @@ svg { flex: none; }
 .color-swatch { flex: none; width: 18px; height: 18px; border: 1px solid #00000033; border-radius: 50%; }
 .swatch-white { background: #f4f5f2; }
 .swatch-gray { background: #575c60; }
+.swatch-black { background: #25282a; }
 @keyframes pop-in { from { opacity: 0; transform: translateX(-50%) scale(.6); } }
 .peg-preview .preview-body { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5px; stroke-dasharray: 4 3; }
 .peg-preview .preview-peg { fill: var(--accent); stroke: #fff; stroke-width: 1px; }
