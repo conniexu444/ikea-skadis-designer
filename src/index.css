@@ -96,7 +96,7 @@ svg { flex: none; }
 .save-status { color: var(--danger); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .appbar-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .button-group { display: flex; margin-right: 4px; }
-.unit-switch { display: flex; flex: none; gap: 2px; height: 26px; margin-right: 2px; padding: 3px; border-radius: 13px; background: #ffc2df; }
+.unit-switch { display: flex; flex: none; gap: 2px; height: 26px; padding: 3px; border-radius: 13px; background: #ffc2df; }
 .unit-switch button { min-width: 28px; padding: 0 8px; border: 0; border-radius: 10px; background: transparent; font-size: 12px; font-weight: 600; line-height: 20px; color: var(--accent-ink); transition: background .2s ease, color .2s ease; }
 .unit-switch button[aria-pressed="true"] { background: #fff; box-shadow: 0 2px 5px #c2185b40; }
 .theme-switch { position: relative; flex: none; width: 46px; height: 26px; margin-right: 6px; padding: 0; border: 0; border-radius: 13px; background: #ffc2df; transition: background .2s ease; }
@@ -254,7 +254,9 @@ svg { flex: none; }
 .add-board { width: 100%; }
 .add-board:disabled { opacity: .5; cursor: not-allowed; }
 .board-settings { display: flex; flex-direction: column; gap: 14px; min-width: 0; margin: 0; padding: 0; border: 0; }
-.board-settings:disabled .field { opacity: .45; }
+.board-settings:disabled .field, .board-settings:disabled legend .field-label { opacity: .45; }
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 0; }
+.board-settings > legend { margin-bottom: 8px; }
 .board-select strong { font-size: 13px; font-weight: 600; }
 .board-select small { margin-left: auto; font-size: 12px; color: var(--muted); }
 .board-card.active small { color: inherit; opacity: .75; }

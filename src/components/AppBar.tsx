@@ -1,5 +1,4 @@
 import { useState, type CSSProperties } from 'react'
-import { setUnit, useUnit } from '../hooks/useUnit'
 
 const BRAND_WORDS = ['Pegboard', 'Designer']
 const THEME_KEY = 'pegboard-theme'
@@ -33,7 +32,6 @@ interface Props {
 
 export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownload }: Props) {
   const [dark, toggleTheme] = useTheme()
-  const unit = useUnit()
   return (
     <header className="appbar">
       <div className="brand">
@@ -55,11 +53,6 @@ export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownloa
         {saveFailed && <span className="save-status" role="status">Storage unavailable — download your layout</span>}
       </div>
       <div className="appbar-actions">
-        <div className="unit-switch" role="group" aria-label="Units">
-          {(['cm', 'in'] as const).map(option => (
-            <button key={option} type="button" aria-pressed={unit === option} title={option === 'cm' ? 'Show centimeters' : 'Show inches'} onClick={() => setUnit(option)}>{option}</button>
-          ))}
-        </div>
         <button
           type="button" role="switch" className="theme-switch" aria-checked={dark} aria-label="Dark mode"
           title={dark ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleTheme}

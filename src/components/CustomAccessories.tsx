@@ -3,6 +3,7 @@ import type { Planner } from '../hooks/usePlanner'
 import { CUSTOM_SIZE_LIMIT, MAX_CUSTOM, nextId, type Accessory, type AccessoryId, type PieceColor } from '../lib/catalog'
 import { Art } from './Art'
 import { useUnit, type Unit } from '../hooks/useUnit'
+import { UnitSwitch } from './UnitSwitch'
 
 interface Props {
   planner: Planner
@@ -125,7 +126,7 @@ export function CustomAccessories({ planner, onStartDrag }: Props) {
                 <input type="text" value={draft.name} maxLength={30} placeholder="e.g. Shelf" autoFocus onChange={event => update({ name: event.target.value })} />
               </label>
               <div className="field">
-                <span className="field-label">Size <small>{unit}</small></span>
+                <div className="field-head"><span className="field-label">Size</span><UnitSwitch /></div>
                 <div className="custom-size">
                   <label>Width<input type="number" min={unit === 'in' ? 0.4 : 1} max={unit === 'in' ? 15.7 : CUSTOM_SIZE_LIMIT} step={unit === 'in' ? 0.1 : 0.5} value={shown(draft.w, unit)} onChange={event => update({ w: { value: event.target.value, unit } })} /></label>
                   <label>Height<input type="number" min={unit === 'in' ? 0.4 : 1} max={unit === 'in' ? 15.7 : CUSTOM_SIZE_LIMIT} step={unit === 'in' ? 0.1 : 0.5} value={shown(draft.h, unit)} onChange={event => update({ h: { value: event.target.value, unit } })} /></label>

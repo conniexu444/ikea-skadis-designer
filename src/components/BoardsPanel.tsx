@@ -3,6 +3,7 @@ import { BOARD_INCHES, BOARD_SIZES, FINISHES, type BoardSize } from '../lib/cata
 import { MAX_BOARDS } from '../lib/layout'
 import type { Planner } from '../hooks/usePlanner'
 import { useUnit } from '../hooks/useUnit'
+import { UnitSwitch } from './UnitSwitch'
 
 const SIZE_GRAPHIC: Record<BoardSize, string> = { '36x56': 'narrow', '56x56': 'square', '76x56': 'wide' }
 const sizeText = (size: BoardSize, unit: 'cm' | 'in') => unit === 'cm' ? size.replace('x', ' × ') : `${BOARD_INCHES[size]}″`
@@ -46,8 +47,8 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       </div>
       <button type="button" className="button add-board" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add board</button>
       <fieldset className="board-settings" disabled={!boardHighlighted}>
+      <legend className="field-head"><span className="field-label">Size</span><UnitSwitch /></legend>
       <div className="field">
-        <span className="field-label">Size <small>{unit}</small></span>
         <div className="segmented" role="group" aria-label="Selected board size">
           {(Object.keys(BOARD_SIZES) as BoardSize[]).map(size => (
             <button key={size} className={`size-choice ${boardHighlighted && size === currentBoard.size ? 'active' : ''}`} type="button" aria-pressed={boardHighlighted && size === currentBoard.size} onClick={() => planner.changeSize(size)}>
