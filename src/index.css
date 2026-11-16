@@ -112,7 +112,7 @@ svg { flex: none; }
 .clear-button { pointer-events: auto; }
 .stage-hints { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; color: #7b776f; font-size: 12px; pointer-events: none; }
 .stage-hints b { color: var(--ink-2); font-weight: 600; }
-.stage-hints kbd { margin-right: 2px; background: #ffffffa6; }
+.stage-hints kbd { margin-right: 2px; border-color: var(--accent-ink); background: #ffffffa6; color: var(--accent-ink); }
 
 /* Boards */
 /* No z-index on boards, so pieces hanging past an edge draw above neighbouring boards. */

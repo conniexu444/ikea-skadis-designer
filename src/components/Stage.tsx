@@ -152,7 +152,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
         <span><kbd>Del</kbd> remove</span>
         <span><kbd>{MOD}C</kbd><kbd>{MOD}V</kbd> copy, paste</span>
       </div>
-      <button type="button" className="button clear-button" onClick={planner.clearItems}>Clear accessories</button>
+      <button type="button" className="button button-primary button-save clear-button" onClick={planner.clearItems}>Clear accessories</button>
       </div>
     </section>
   )
