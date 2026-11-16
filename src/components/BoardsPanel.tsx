@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
+import { BOARD_INCHES, BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
 import { MAX_BOARDS } from '../lib/layout'
 import type { Planner } from '../hooks/usePlanner'
+import { useUnit } from '../hooks/useUnit'
+import { UnitSwitch } from './UnitSwitch'
 
 const SIZE_GRAPHIC: Record<BoardSize, string> = { '36x56': 'narrow', '56x56': 'square', '76x56': 'wide' }
+const sizeText = (size: BoardSize, unit: 'cm' | 'in') => unit === 'cm' ? size.replace('x', ' × ') : `${BOARD_INCHES[size]}″`
 const label = (text: string) => text[0].toUpperCase() + text.slice(1)
 const COLLAPSED_KEY = 'pegboard-boards-collapsed'
 
 export function BoardsPanel({ planner }: { planner: Planner }) {
   const { layout, currentBoard, highlightedBoardIds, boardHighlighted } = planner
+  const unit = useUnit()
   const [open, setOpen] = useState(() => localStorage.getItem(COLLAPSED_KEY) !== '1')
   function toggle() {
     setOpen(!open)
@@ -32,7 +36,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
             <div key={board.id} className={`board-card ${active ? 'active' : ''}`}>
               <button className="board-select" type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
                 <strong>Board {i + 1}</strong>
-                <small>{board.size.replace('x', ' × ')} cm</small>
+                <small>{sizeText(board.size, unit)}{unit === 'cm' ? ' cm' : ''}</small>
               </button>
               {layout.boards.length > 1 && (
                 <button className="board-remove" type="button" aria-label={`Remove board ${i + 1}`} title="Remove board" onClick={() => planner.removeBoard(board.id)}>×</button>
@@ -43,12 +47,13 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       </div>
       <button type="button" className="button add-board" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add board</button>
       <fieldset className="board-settings" disabled={!boardHighlighted}>
+      <legend className="field-head"><span className="field-label">Size</span><UnitSwitch /></legend>
       <div className="field">
-        <span className="field-label">Size <small>cm</small></span>
         <div className="segmented" role="group" aria-label="Selected board size">
           {(Object.keys(BOARD_SIZES) as BoardSize[]).map(size => (
             <button key={size} className={`size-choice ${boardHighlighted && size === currentBoard.size ? 'active' : ''}`} type="button" aria-pressed={boardHighlighted && size === currentBoard.size} onClick={() => planner.changeSize(size)}>
-              <span className={`size-graphic ${SIZE_GRAPHIC[size]}`} aria-hidden="true" />{size.replace('x', ' × ')}
+              <span className={`size-graphic ${SIZE_GRAPHIC[size]}`} aria-hidden="true" />
+              <span className="size-label">{sizeText(size, unit)}</span>
             </button>
           ))}
         </div>

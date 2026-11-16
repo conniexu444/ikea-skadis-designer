@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { accessory, nextId, pieceColor, type AccessoryId, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from '../lib/catalog'
+import { accessory, nextId, pieceColor, setCustomAccessories, type Accessory, type AccessoryId, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from '../lib/catalog'
 import { findSpot, placementIssue, usedHoles, type Hole } from '../lib/holes'
 import {
   MAX_BOARDS, STORAGE_KEY, boardRectOverlaps, freeBoardSpot, groupPasteOffset, overlapsAny, readInitialLayout, refitItems, separateBoards,
@@ -22,6 +22,7 @@ export function usePlanner() {
   const [clipboard, setClipboard] = useState<Clipboard | null>(null)
   const [saveFailed, setSaveFailed] = useState(false)
   const layout = history.present
+  setCustomAccessories(layout.custom)
   const selectedBoardId = layout.boards.some(board => board.id === chosenBoardId) ? chosenBoardId! : layout.boards[0].id
   const currentBoard = layout.boards.find(board => board.id === selectedBoardId)!
   const selectedItem = layout.items.find(item => item.id === selectedId) ?? null
@@ -136,6 +137,33 @@ export function usePlanner() {
     }
   }
 
+  /** Adds or updates a custom piece. Placed copies that no longer fit move to the nearest free spot, or are removed. */
+  function saveCustom(piece: Accessory) {
+    commit(draft => {
+      const list = draft.custom ?? [], index = list.findIndex(entry => entry.id === piece.id)
+      draft.custom = index < 0 ? [...list, piece] : list.map(entry => (entry.id === piece.id ? piece : entry))
+      setCustomAccessories(draft.custom)
+      const kept = draft.items.filter(item => item.type !== piece.id)
+      for (const item of draft.items.filter(entry => entry.type === piece.id)) {
+        const board = draft.boards.find(entry => entry.id === item.boardId)!, rotation = piece.fixed ? 0 : item.rotation
+        let spot: Hole | null = [item.col, item.row]
+        if (placementIssue(board, item.type, rotation, item.col, item.row, usedHoles(kept, board))) spot = findSpot(board, kept, item.type, rotation, [item.col, item.row])
+        if (!spot) continue
+        const color = item.color && piece.colors?.includes(item.color) ? { color: item.color } : {}
+        kept.push({ id: item.id, boardId: item.boardId, type: item.type, col: spot[0], row: spot[1], rotation, ...color })
+      }
+      draft.items = kept
+    })
+  }
+  function removeCustom(id: string) {
+    commit(draft => {
+      draft.custom = (draft.custom ?? []).filter(entry => entry.id !== id)
+      draft.items = draft.items.filter(item => item.type !== id)
+    })
+    if (selectedItem?.type === id) setSelectedId(null)
+    setArea(null)
+  }
+
   function clearItems() {
     if (!layout.items.length) return
     commit(draft => { draft.items = [] })
@@ -192,6 +220,7 @@ export function usePlanner() {
     if (clipboard.kind === 'group') { pasteGroup(clipboard); return }
     if (clipboard.kind === 'item') {
       const { item } = clipboard, board = currentBoard
+      if (!accessory(item.type)) return
       const start: Hole = item.boardId === board.id ? [item.col + 2, item.row + 2] : [item.col, item.row]
       const spot = findSpot(board, layout.items, item.type, item.rotation, start)
       if (!spot) return
@@ -205,7 +234,7 @@ export function usePlanner() {
     const id = `board-${nextId().slice(6)}`, spot = freeBoardSpot(layout.boards, clipboard.board.size, clipboard.board)
     commit(draft => {
       draft.boards.push({ ...clipboard.board, id, ...spot })
-      draft.items.push(...clipboard.items.map(item => ({ ...item, id: nextId(), boardId: id })))
+      draft.items.push(...clipboard.items.filter(item => accessory(item.type)).map(item => ({ ...item, id: nextId(), boardId: id })))
     })
     selectBoard(id)
   }
@@ -268,7 +297,7 @@ export function usePlanner() {
       draft.boards.push(...boards)
       const items: Item[] = []
       let skipped = 0
-      for (const item of copied.items) {
+      for (const item of copied.items.filter(entry => accessory(entry.type))) {
         const newBoardId = boardIdMap.get(item.boardId)
         if (newBoardId) { items.push({ ...item, id: nextId(), boardId: newBoardId }); continue }
         const board = draft.boards.find(entry => entry.id === item.boardId) ?? draft.boards.find(entry => entry.id === currentBoard.id)!
@@ -290,7 +319,7 @@ export function usePlanner() {
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
     selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
     groupSelection, selectedItemIds, highlightedBoardIds, selectArea, moveGroup, removeGroup, duplicateGroup,
-    addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, colorSelected, nudgeSelected, clearItems,
+    addAccessory, saveCustom, removeCustom, moveItem, removeSelected, duplicateSelected, rotateSelected, colorSelected, nudgeSelected, clearItems,
     changeSize, changeColor, addBoard, removeBoard, moveBoard, copySelection, paste,
   }
 }

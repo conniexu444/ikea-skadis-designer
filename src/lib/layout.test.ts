@@ -36,6 +36,24 @@ describe('sanitizeLayout', () => {
     expect(layout.items.map(item => item.color)).toEqual(['white', undefined, undefined])
   })
 
+  it('hangs a shelf on a top and a bottom hole at each end, 7 holes apart', () => {
+    const board = DEFAULT_LAYOUT.boards[0]
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 's', boardId: board.id, type: 'shelf', col: 2, row: 6, rotation: 90, color: 'white' }] })!
+    expect(layout.items[0]).toMatchObject({ col: 2, row: 6, rotation: 0, color: 'white' })
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '14,8', '2,6', '2,8'])
+  })
+
+  it('hangs a cup on two neighboring holes in a row and a clip on one', () => {
+    const board = DEFAULT_LAYOUT.boards[0]
+    const items = [
+      { id: 'cup', boardId: board.id, type: 'cup', col: 2, row: 6, rotation: 0, color: 'white' },
+      { id: 'clip', boardId: board.id, type: 'clip', col: 10, row: 6, rotation: 0, color: 'black' },
+    ]
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items })!
+    expect(layout.items.map(item => item.color)).toEqual(['white', 'black'])
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['10,6', '2,6', '4,6'])
+  })
+
   it('loads a hook upright even if the saved layout has it rotated', () => {
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'hook', boardId: 'board-1', type: 'hook', col: 6, row: 6, rotation: 90 }] })!
     expect(layout.items[0].rotation).toBe(0)
@@ -152,5 +170,36 @@ describe('groupPasteOffset', () => {
     const boards: Board[] = [{ id: 'a', size: '36x56', color: 'white', x: 0, y: 0 }, { id: 'b', size: '36x56', color: 'white', x: 37, y: 0 }]
     const [ox, oy] = groupPasteOffset(boards, boards)
     expect(boards.some(copy => boards.some(other => boardRectOverlaps({ ...copy, id: 'x', x: copy.x + ox, y: copy.y + oy }, other)))).toBe(false)
+  })
+})
+
+describe('custom accessories', () => {
+  const shelf = { id: 'custom-shelf', name: 'Shelf', w: 8, h: 4, pegs: [[0, 0], [4, 0]], top: 1, left: 2, fixed: true, colors: ['white', 'gray'], detail: '' }
+
+  it('keeps valid custom pieces and reserves every hole they clip into', () => {
+    const layout = sanitizeLayout({
+      ...DEFAULT_LAYOUT,
+      custom: [shelf],
+      items: [
+        { id: 'a', boardId: DEFAULT_LAYOUT.boards[0].id, type: 'custom-shelf', col: 2, row: 2, rotation: 0 },
+        { id: 'b', boardId: DEFAULT_LAYOUT.boards[0].id, type: 'button', col: 4, row: 2, rotation: 0 },
+      ],
+    })!
+    expect(layout.custom).toHaveLength(1)
+    const shelfItem = layout.items.find(item => item.id === 'a')!
+    expect([shelfItem.col, shelfItem.row]).toEqual([2, 2])
+    const button = layout.items.find(item => item.id === 'b')!
+    expect([button.col, button.row]).not.toEqual([4, 2])
+    expect(usedHoles(layout.items, layout.boards[0]).size).toBe(3)
+  })
+
+  it('drops custom pieces whose pegs are off the staggered grid, and their items', () => {
+    const layout = sanitizeLayout({
+      ...DEFAULT_LAYOUT,
+      custom: [{ ...shelf, pegs: [[0, 0], [2, 0]] }],
+      items: [{ id: 'a', boardId: DEFAULT_LAYOUT.boards[0].id, type: 'custom-shelf', col: 2, row: 2, rotation: 0 }],
+    })!
+    expect(layout.custom).toBeUndefined()
+    expect(layout.items).toHaveLength(0)
   })
 })

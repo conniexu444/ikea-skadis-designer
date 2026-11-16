@@ -1,4 +1,4 @@
-import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from './catalog'
+import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, sanitizeCustom, setCustomAccessories, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from './catalog'
 import { HOLE_PITCH, anchorFor, findSpot, holePoint, itemPlacement, nearestHole, placementIssue, usedHoles } from './holes'
 
 export const STORAGE_KEY = 'skadis-studio-v3'
@@ -75,6 +75,8 @@ export function sanitizeLayout(input: any): Layout | null {
   }
   if (!boards?.length) return null
   separateBoards(boards)
+  const custom = sanitizeCustom(input.custom)
+  setCustomAccessories(custom)
   const items: Item[] = []
   // oxlint-disable-next-line typescript/no-explicit-any
   input.items.slice(0, 200).forEach((item: any, i: number) => {
@@ -93,7 +95,7 @@ export function sanitizeLayout(input: any): Layout | null {
     }
     items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation, ...(a.colors?.includes(item.color) ? { color: item.color as PieceColor } : {}) })
   })
-  return { name: String(input.name || 'My perfect setup').slice(0, 60), boards, items }
+  return { name: String(input.name || 'My perfect setup').slice(0, 60), boards, items, ...(custom.length ? { custom } : {}) }
 }
 
 export function decodeLayout(value: string): Layout | null {
