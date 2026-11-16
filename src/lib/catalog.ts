@@ -27,7 +27,7 @@ export interface Layout { name: string; boards: Board[]; items: Item[] }
 
 export const ACCESSORIES: Accessory[] = [
   { id: 'wall-mount', name: 'Wall mount', w: 3, h: 3, pegs: [[0, 0]], detail: 'Screws the board to the wall' },
-  { id: 'hook', name: 'Hook', w: 6, h: 14, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Clips into two holes, one above the other' },
+  { id: 'hook', name: 'Hook', w: 6, h: 10, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Clips into two holes, one above the other' },
   { id: 'long-hook', name: 'Long hook', w: 3, h: 7, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Two holes, arm sticks straight out from the board' },
   { id: 'button', name: 'Button', w: 2.4, h: 2.4, pegs: [[0, 0]], top: 1.2, fixed: true, colors: ['white', 'gray'], detail: 'Round knob in a single hole' },
 ]

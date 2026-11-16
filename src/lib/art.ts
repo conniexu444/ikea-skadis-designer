@@ -1,6 +1,6 @@
 import type { AccessoryId, PieceColor } from './catalog'
 
-const hookPath = 'M30 12V98c0 18-8 28-18 27-6 0-8-5-8-11'
+const hookPath = 'M30 12V50c0 12-5 22-13 27-5 3-10 1-11-5'
 const longHookPath = 'M15 12V48c0 7 9 7 9 0v-6'
 
 const SHADES = {
@@ -20,7 +20,7 @@ const DRAW: Record<AccessoryId, (shade: Shade) => string> = {
 export const art = (type: AccessoryId, color: PieceColor = 'gray') => DRAW[type](SHADES[color])
 
 /** Each drawing's viewBox matches its accessory's w×h at 10 units per cm, so it fills its footprint without distortion. */
-export const ART_VIEWBOX: Record<AccessoryId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 140', 'long-hook': '0 0 30 70', button: '0 0 24 24' }
+export const ART_VIEWBOX: Record<AccessoryId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24' }
 
 export const artSvg = (type: AccessoryId, color: PieceColor | undefined, attributes = '') =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${ART_VIEWBOX[type]}" ${attributes} aria-hidden="true">${art(type, color)}</svg>`
