@@ -264,6 +264,8 @@ svg { flex: none; }
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field-label { font-size: 12px; font-weight: 600; color: var(--ink-2); }
 .field-label small { color: var(--muted); font-weight: 500; }
+:is(.board-settings, .custom-form) .field-label { font: 400 18px/1.1 var(--display); letter-spacing: .01em; color: var(--ink); }
+:is(.board-settings, .custom-form) .field-label small { font: 500 11.5px/1 var(--font); letter-spacing: 0; }
 .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 10px; background: var(--bg); }
 .segmented button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; font-size: 12px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .segmented button:hover { color: var(--ink); }
