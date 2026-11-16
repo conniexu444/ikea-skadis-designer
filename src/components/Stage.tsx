@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
+import { COLOR_NAMES, accessory, pieceColor } from '../lib/catalog'
 import { areaSelection } from '../lib/layout'
-import { accessory } from '../lib/catalog'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
 import type { Planner } from '../hooks/usePlanner'
@@ -19,6 +19,7 @@ const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+'
 
 export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startBoardDrag }: Props) {
   const { layout, selectedItem } = planner
+  const colorable = selectedItem && !drag ? accessory(selectedItem.type)! : null
   const pan = useRef<{ id: number; x: number; y: number } | null>(null)
   const [panning, setPanning] = useState(false)
   const [spaceHeld, setSpaceHeld] = useState(false)
@@ -105,7 +106,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
                 selected={planner.highlightedBoardIds.has(board.id)} selectedIds={planner.selectedItemIds} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
-                rotatableId={selectedItem && !drag && !accessory(selectedItem.type)!.fixed ? selectedItem.id : null} onRotate={planner.rotateSelected}
+                toolsId={selectedItem && !drag ? selectedItem.id : null} onRotate={planner.rotateSelected}
               />
             ))}
           </div>
@@ -118,6 +119,22 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
         )}
       </div>
       <div className="stage-corner">
+      {selectedItem && colorable?.colors && (
+        <div className="color-panel" role="group" aria-label={`${colorable.name} color`} onPointerDown={event => event.stopPropagation()}>
+          <span className="color-panel-title">{colorable.name} color</span>
+          <div className="color-options">
+            {colorable.colors.map(color => (
+              <button
+                key={color} type="button" className="color-option" aria-pressed={color === pieceColor(selectedItem.type, selectedItem.color)}
+                onClick={() => planner.colorSelected(color)}
+              >
+                <span className={`color-swatch swatch-${color}`} aria-hidden="true" />
+                {COLOR_NAMES[color]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="stage-hints" aria-hidden="true">
         <span><b>Pinch</b> to zoom</span>
         <span><b>Drag</b> the canvas to select an area</span>

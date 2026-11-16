@@ -1,4 +1,4 @@
-import { BOARD_SIZES, accessory, type Layout } from './catalog'
+import { BOARD_SIZES, accessory, pieceColor, type Layout } from './catalog'
 import { artSvg } from './art'
 import { allHoles, holePoint, itemPlacement } from './holes'
 
@@ -29,8 +29,8 @@ export function layoutSvg(layout: Layout, scale = 10, pad = 45) {
       const a = accessory(item.type)!, [rx, ry, rw] = itemPlacement(item, board.size).rect
       const ix = rx * scale, iy = ry * scale, iw = a.w * scale, ih = a.h * scale
       return item.rotation === 90
-        ? `<g transform="translate(${ix + rw * scale} ${iy}) rotate(90)">${artSvg(item.type, `x="0" y="0" width="${iw}" height="${ih}"`)}</g>`
-        : artSvg(item.type, `x="${ix}" y="${iy}" width="${iw}" height="${ih}"`)
+        ? `<g transform="translate(${ix + rw * scale} ${iy}) rotate(90)">${artSvg(item.type, pieceColor(item.type, item.color), `x="0" y="0" width="${iw}" height="${ih}"`)}</g>`
+        : artSvg(item.type, pieceColor(item.type, item.color), `x="${ix}" y="${iy}" width="${iw}" height="${ih}"`)
     }).join('')
     return `<g transform="translate(${pad + (board.x - left) * scale} ${pad + (board.y - top) * scale})"><rect x="-6" y="-6" width="${bw * scale + 12}" height="${bh * scale + 12}" rx="8" fill="${color[1]}"/><rect width="${bw * scale}" height="${bh * scale}" fill="${color[0]}"/>${holes}${items}</g>`
   }).join('')

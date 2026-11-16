@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { accessory, nextId, type AccessoryId, type Board, type BoardSize, type Finish, type Item, type Layout } from '../lib/catalog'
+import { accessory, nextId, pieceColor, type AccessoryId, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from '../lib/catalog'
 import { findSpot, placementIssue, usedHoles, type Hole } from '../lib/holes'
 import {
   MAX_BOARDS, STORAGE_KEY, boardRectOverlaps, freeBoardSpot, groupPasteOffset, overlapsAny, readInitialLayout, refitItems, separateBoards,
@@ -120,6 +120,10 @@ export function usePlanner() {
       : [item.col, item.row]
     if (!spot) return
     commit(draft => { Object.assign(draft.items.find(entry => entry.id === item.id)!, { rotation, col: spot[0], row: spot[1] }) })
+  }
+  function colorSelected(color: PieceColor) {
+    if (!selectedItem || !accessory(selectedItem.type)!.colors?.includes(color) || pieceColor(selectedItem.type, selectedItem.color) === color) return
+    commit(draft => { draft.items.find(entry => entry.id === selectedItem.id)!.color = color })
   }
   /** Moves the selected piece `holes` steps in a direction, skipping over holes that are in use. */
   function nudgeSelected([dx, dy]: [number, number], holes: number) {
@@ -286,7 +290,7 @@ export function usePlanner() {
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
     selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
     groupSelection, selectedItemIds, highlightedBoardIds, selectArea, moveGroup, removeGroup, duplicateGroup,
-    addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, nudgeSelected, clearItems,
+    addAccessory, moveItem, removeSelected, duplicateSelected, rotateSelected, colorSelected, nudgeSelected, clearItems,
     changeSize, changeColor, addBoard, removeBoard, moveBoard, copySelection, paste,
   }
 }

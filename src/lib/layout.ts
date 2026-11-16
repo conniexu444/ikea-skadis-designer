@@ -1,4 +1,4 @@
-import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout } from './catalog'
+import { BOARD_SIZES, CANVAS_LIMIT, accessory, clamp, isBoardSize, type Board, type BoardSize, type Finish, type Item, type Layout, type PieceColor } from './catalog'
 import { HOLE_PITCH, anchorFor, findSpot, holePoint, itemPlacement, nearestHole, placementIssue, usedHoles } from './holes'
 
 export const STORAGE_KEY = 'skadis-studio-v3'
@@ -91,7 +91,7 @@ export function sanitizeLayout(input: any): Layout | null {
       if (!spot) return
       ;[col, row] = spot
     }
-    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation })
+    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation, ...(a.colors?.includes(item.color) ? { color: item.color as PieceColor } : {}) })
   })
   return { name: String(input.name || 'My perfect setup').slice(0, 60), boards, items }
 }

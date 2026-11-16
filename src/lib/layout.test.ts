@@ -26,6 +26,16 @@ describe('sanitizeLayout', () => {
     expect(layout.items).toEqual([])
   })
 
+  it('keeps a piece color only where that piece comes in it', () => {
+    const items = [
+      { id: 'a', boardId: 'board-1', type: 'hook', col: 6, row: 6, rotation: 0, color: 'white' },
+      { id: 'b', boardId: 'board-1', type: 'button', col: 10, row: 6, rotation: 0, color: 'pink' },
+      { id: 'c', boardId: 'board-1', type: 'wall-mount', col: 14, row: 6, rotation: 0, color: 'white' },
+    ]
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items })!
+    expect(layout.items.map(item => item.color)).toEqual(['white', undefined, undefined])
+  })
+
   it('loads a hook upright even if the saved layout has it rotated', () => {
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'hook', boardId: 'board-1', type: 'hook', col: 6, row: 6, rotation: 90 }] })!
     expect(layout.items[0].rotation).toBe(0)

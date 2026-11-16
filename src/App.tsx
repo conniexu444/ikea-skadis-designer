@@ -112,7 +112,7 @@ export default function App() {
           width: ghost.w * ghost.pxPerCm, height: ghost.h * ghost.pxPerCm,
           left: ghost.clientX - ghost.w * ghost.pxPerCm / 2, top: ghost.clientY - ghost.h * ghost.pxPerCm / 2,
         }}>
-          <Art type={accessory(ghost.type)!.id} style={ghost.rotation === 90 ? { transform: 'rotate(90deg)' } : undefined} />
+          <Art type={accessory(ghost.type)!.id} color={planner.layout.items.find(item => item.id === ghost.id)?.color} style={ghost.rotation === 90 ? { transform: 'rotate(90deg)' } : undefined} />
         </div>
       )}
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
