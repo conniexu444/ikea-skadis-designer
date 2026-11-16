@@ -1,7 +1,7 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { BOARD_SIZES, type AccessoryId, type Board, type Rotation } from '../lib/catalog'
 import { anchorFor, geometry, placementIssue, usedHoles, type PlacementIssue } from '../lib/holes'
-import { snapBoard } from '../lib/layout'
+import { holeDelta, snapBoard } from '../lib/layout'
 import type { Planner } from './usePlanner'
 import { useLatest } from './useLatest'
 
@@ -18,7 +18,12 @@ export interface PieceDrag {
   clientX: number; clientY: number; target: DropTarget | null
 }
 export interface BoardDrag { kind: 'board'; id: string; startX: number; startY: number; x: number; y: number; preview: { x: number; y: number; snapped: boolean } }
-export type Drag = PieceDrag | BoardDrag
+/** Moving a box selection: boards shift by (dx, dy) cm, loose pieces by (dc, dr) holes. */
+export interface GroupDrag {
+  kind: 'group'; startX: number; startY: number; dx: number; dy: number; dc: number; dr: number; moved: boolean
+  boardIds: string[]; itemIds: string[]; origin: { kind: 'board' | 'item'; id: string }
+}
+export type Drag = PieceDrag | BoardDrag | GroupDrag
 
 /** Dragging pieces from the catalog or between holes, and dragging boards by their handle. */
 export function useDrag(planner: Planner, pxPerCm: number) {
@@ -43,8 +48,15 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     return best?.target ?? null
   }
 
+  function startGroupDrag(event: ReactPointerEvent, origin: GroupDrag['origin']) {
+    const group = planner.groupSelection!
+    event.preventDefault()
+    setDrag({ kind: 'group', startX: event.clientX, startY: event.clientY, dx: 0, dy: 0, dc: 0, dr: 0, moved: false, boardIds: group.boardIds, itemIds: group.itemIds, origin })
+  }
+
   function startPieceDrag(event: ReactPointerEvent, type: AccessoryId, id: string | null = null) {
     if (event.button !== 0 || (event.target as Element).closest('button')) return
+    if (id && planner.groupSelection?.itemIds.includes(id)) { startGroupDrag(event, { kind: 'item', id }); return }
     event.preventDefault()
     const item = id ? planner.layout.items.find(entry => entry.id === id) : null, rotation = item?.rotation ?? 0
     const [, , w, h] = geometry(type, rotation).rect
@@ -55,6 +67,7 @@ export function useDrag(planner: Planner, pxPerCm: number) {
 
   function startBoardDrag(event: ReactPointerEvent, id: string) {
     if (event.button !== 0) return
+    if (planner.groupSelection?.boardIds.includes(id)) { startGroupDrag(event, { kind: 'board', id }); return }
     event.preventDefault()
     const board = planner.layout.boards.find(entry => entry.id === id)
     if (!board) return
@@ -72,6 +85,12 @@ export function useDrag(planner: Planner, pxPerCm: number) {
         setDrag({ ...drag, clientX: event.clientX, clientY: event.clientY, target: dropTarget(event.clientX, event.clientY, drag) })
         return
       }
+      if (drag.kind === 'group') {
+        const dx = (event.clientX - drag.startX) / pxPerCm, dy = (event.clientY - drag.startY) / pxPerCm, [dc, dr] = holeDelta(dx, dy)
+        const half = (n: number) => Math.round(n * 2) / 2
+        setDrag({ ...drag, dx: half(dx), dy: half(dy), dc, dr, moved: drag.moved || Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 3 })
+        return
+      }
       const board = planner.layout.boards.find(entry => entry.id === drag.id)!
       const preview = snapBoard(planner.layout.boards, board, drag.x + (event.clientX - drag.startX) / pxPerCm, drag.y + (event.clientY - drag.startY) / pxPerCm)
       setDrag({ ...drag, preview })
@@ -80,8 +99,14 @@ export function useDrag(planner: Planner, pxPerCm: number) {
       const { drag, planner } = latest.current
       setDrag(null)
       if (!drag) return
+      if (drag.kind === 'group') {
+        if (drag.moved) planner.moveGroup(drag.dx, drag.dy, drag.dc, drag.dr)
+        else if (drag.origin.kind === 'item') planner.selectItem(drag.origin.id)
+        else planner.selectBoard(drag.origin.id)
+        return
+      }
       if (drag.kind === 'board') {
-        if (!planner.moveBoard(drag.id, drag.preview.x, drag.preview.y, drag.preview.snapped)) planner.notify('Boards cannot overlap — drag near an edge to snap them together')
+        if (!planner.moveBoard(drag.id, drag.preview.x, drag.preview.y)) planner.notify('Boards cannot overlap — drag near an edge to snap them together')
         return
       }
       const target = dropTarget(event.clientX, event.clientY, drag)
@@ -94,7 +119,9 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onCancel)
+    document.body.classList.add('dragging')
     return () => {
+      document.body.classList.remove('dragging')
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onCancel)

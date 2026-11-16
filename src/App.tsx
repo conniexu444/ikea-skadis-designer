@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { accessory } from './lib/catalog'
 import { downloadPng } from './lib/exportPng'
-import { overlapsAny, shareLink, sharedLayout } from './lib/layout'
+import { HOLE_PITCH } from './lib/holes'
+import { overlapsAny, sharedLayout } from './lib/layout'
 import { useCamera } from './hooks/useCamera'
 import { useDrag } from './hooks/useDrag'
 import { useLatest } from './hooks/useLatest'
@@ -13,6 +14,8 @@ import { Catalog } from './components/Catalog'
 import { HelpDialog } from './components/HelpDialog'
 import { Stage } from './components/Stage'
 import { Toast } from './components/Toast'
+
+const BANNER_MESSAGE = 'Made by ConnieCodes Using Devin by Cognition'
 
 const ARROWS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
 
@@ -27,7 +30,7 @@ export default function App() {
   useEffect(() => {
     const onHashChange = () => {
       const shared = sharedLayout(location.hash)
-      if (shared) { latest.current.planner.replace(shared); latest.current.planner.notify('Shared layout opened') }
+      if (shared) latest.current.planner.replace(shared)
     }
     const onKeyDown = (event: KeyboardEvent) => {
       const { planner, helpOpen } = latest.current
@@ -54,8 +57,22 @@ export default function App() {
         return
       }
       if (event.key === 'Escape') { planner.clearSelection(); return }
-      if (!planner.selectedItem) return
-      if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); planner.removeSelected(); return }
+      if (planner.groupSelection) {
+        if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); if (target.matches('button')) (target as HTMLElement).blur(); planner.removeGroup(); return }
+        if (arrow) {
+          event.preventDefault()
+          const dc = arrow[0] * 2 * (event.shiftKey ? 3 : 1), dr = arrow[1] * 2 * (event.shiftKey ? 3 : 1)
+          planner.moveGroup(dc * HOLE_PITCH, dr * HOLE_PITCH, dc, dr)
+        }
+        return
+      }
+      const remove = event.key === 'Delete' || event.key === 'Backspace'
+      if (remove && target.matches('button')) (target as HTMLElement).blur()
+      if (!planner.selectedItem) {
+        if (remove && planner.boardHighlighted) { event.preventDefault(); planner.removeBoard() }
+        return
+      }
+      if (remove) { event.preventDefault(); planner.removeSelected(); return }
       if (arrow) { event.preventDefault(); planner.nudgeSelected(arrow, event.shiftKey ? 3 : 1) }
     }
     window.addEventListener('hashchange', onHashChange)
@@ -66,23 +83,8 @@ export default function App() {
     }
   }, [latest])
 
-  async function copyLink() {
-    const link = shareLink(planner.layout)
-    try {
-      await navigator.clipboard.writeText(link)
-      planner.notify('Shareable link copied')
-    } catch {
-      const input = document.createElement('textarea')
-      input.value = link
-      document.body.appendChild(input)
-      input.select()
-      const ok = document.execCommand('copy')
-      input.remove()
-      planner.notify(ok ? 'Shareable link copied' : 'Copying is unavailable here')
-    }
-  }
   async function download() {
-    planner.notify(await downloadPng(planner.layout) ? 'Layout image downloaded' : 'Could not create an image')
+    if (!await downloadPng(planner.layout)) planner.notify('Could not create an image')
   }
 
   const ghost = drag?.kind === 'piece' ? drag : null
@@ -90,14 +92,18 @@ export default function App() {
     <>
       <div className="app">
         <AppBar
-          name={planner.layout.name} saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
-          onRename={planner.rename} onUndo={planner.undo} onRedo={planner.redo} onHelp={() => setHelpOpen(true)} onShare={copyLink} onDownload={download}
+          saveFailed={planner.saveFailed} canUndo={planner.canUndo} canRedo={planner.canRedo}
+          onUndo={planner.undo} onRedo={planner.redo} onDownload={download}
         />
+        <div className="sponsor-banner" role="note" aria-label={BANNER_MESSAGE}>
+          <div className="sponsor-track" aria-hidden="true">
+            {Array.from({ length: 4 }, (_, index) => <span key={index}>{BANNER_MESSAGE}</span>)}
+          </div>
+        </div>
         <main className="workbench">
           <aside className="sidebar" aria-label="Boards and accessories">
             <BoardsPanel planner={planner} />
             <Catalog onAdd={type => planner.addAccessory(type)} onStartDrag={(event, type) => startPieceDrag(event, type)} />
-            <p className="disclaimer">Unofficial planning tool, not affiliated with IKEA. Sizes and hole spacing are approximate — check product details before buying. <a href="https://www.ikea.com/us/en/search/?q=SK%C3%85DIS" target="_blank" rel="noopener noreferrer">SKÅDIS at IKEA ↗</a></p>
           </aside>
           <Stage planner={planner} camera={camera} viewportRef={viewportRef} drag={drag} startPieceDrag={startPieceDrag} startBoardDrag={startBoardDrag} />
         </main>

@@ -1,4 +1,4 @@
-# SKÅDIS Studio
+# Pegboard Designer
 
 An unofficial, browser-based planner for arranging two IKEA SKÅDIS pegboards and their accessories.
 

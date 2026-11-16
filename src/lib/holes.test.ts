@@ -34,25 +34,20 @@ describe('hole occupancy', () => {
 
   it('refuses a piece on a hole a wall mount already uses', () => {
     const used = usedHoles([mount], board)
-    expect(placementIssue(board, 'hook', 0, 4, 4, used)).toBe('taken')
-    expect(placementIssue(board, 'hook', 0, 6, 4, used)).toBeNull()
+    expect(placementIssue(board, 'wall-mount', 0, 4, 4, used)).toBe('taken')
+    expect(placementIssue(board, 'wall-mount', 0, 6, 4, used)).toBeNull()
   })
 
   it('ignores the piece being moved', () => {
     expect(placementIssue(board, 'wall-mount', 0, 4, 4, usedHoles([mount], board, 'm'))).toBeNull()
   })
 
-  it('lets pieces hang off the board but refuses pegs that miss a hole', () => {
-    const hanging = allHoles(board.size).filter(([col, row]) => {
-      const [x, y, w, h] = placement(board.size, 'shelf', 0, col, row).rect
-      return !placementIssue(board, 'shelf', 0, col, row, new Set()) && (x < 0 || y < 0 || x + w > 56 || y + h > 56)
-    })
-    expect(hanging.length).toBeGreaterThan(0)
-    expect(placementIssue(board, 'hook', 0, 1, 0, new Set())).toBe('edge')
+  it('refuses pegs that miss a hole', () => {
+    expect(placementIssue(board, 'wall-mount', 0, 1, 0, new Set())).toBe('edge')
   })
 
   it('prefers spots fully on the board when placing automatically', () => {
-    const [x, y, w, h] = placement(board.size, 'shelf', 0, ...findSpot(board, [], 'shelf', 0, [20, 4])!).rect
+    const [x, y, w, h] = placement(board.size, 'wall-mount', 0, ...findSpot(board, [], 'wall-mount', 0, [20, 4])!).rect
     expect(x >= 0 && y >= 0 && x + w <= 56 && y + h <= 56).toBe(true)
   })
 
