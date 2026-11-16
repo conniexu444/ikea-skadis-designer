@@ -168,7 +168,7 @@ svg { flex: none; }
 .selection-actions button { height: 34px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .selection-actions button:hover { border-color: #c5bdae; color: var(--ink); }
 .selection-actions button[data-action="remove"]:hover { border-color: #e6aaa4; color: var(--danger); background: #fdf3f2; }
-.board-selector { display: flex; flex-direction: column; gap: 2px; margin-left: 3px; padding-left: 10px; border-left: 1px solid var(--line); }
+.board-selector { display: flex; flex-direction: column; gap: 2px; }
 .board-card { position: relative; border-radius: 6px; color: var(--ink-2); }
 .board-card:hover { background: var(--bg); }
 .board-card.active { background: var(--accent-soft); color: var(--accent-ink); }
