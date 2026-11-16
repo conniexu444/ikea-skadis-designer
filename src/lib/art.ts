@@ -17,7 +17,7 @@ const DRAW: Record<BuiltinId, (shade: Shade) => string> = {
   hook: s => `<path d="${hookPath}" fill="none" stroke="${s.edge}" stroke-width="13" stroke-linecap="round"/><path d="${hookPath}" fill="none" stroke="${s.body}" stroke-width="8" stroke-linecap="round"/>`,
   'long-hook': s => `<path d="${longHookPath}" fill="none" stroke="${s.edge}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="${longHookPath}" fill="none" stroke="${s.body}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`,
   shelf: s => [20, 260].map(x => `<path d="${shelfHookPath(x)}" fill="none" stroke="${s.edge}" stroke-width="6" stroke-linecap="round"/><path d="${shelfHookPath(x)}" fill="none" stroke="${s.body}" stroke-width="3" stroke-linecap="round"/>`).join('')
-    + `<rect x="2" y="15" width="276" height="43" rx="11" fill="${s.body}" stroke="${s.edge}" stroke-width="2"/><rect x="10" y="19" width="260" height="6" rx="3" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
+    + `<rect x="2" y="15" width="276" height="28" rx="11" fill="${s.body}" stroke="${s.edge}" stroke-width="2"/><rect x="10" y="19" width="260" height="6" rx="3" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
   button: s => `<circle cx="12" cy="12" r="11" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/><circle cx="12" cy="12" r="7.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
 }
 
@@ -35,7 +35,7 @@ function drawCustom(type: AccessoryId, shade: Shade) {
 export const art = (type: AccessoryId, color: PieceColor = 'gray') => isCustom(type) ? drawCustom(type, SHADES[color]) : DRAW[type](SHADES[color])
 
 /** Each drawing's viewBox matches its accessory's w×h at 10 units per cm, so it fills its footprint without distortion. */
-const ART_VIEWBOX: Record<BuiltinId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24', shelf: '0 0 280 60' }
+const ART_VIEWBOX: Record<BuiltinId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24', shelf: '0 0 280 45' }
 export function artViewBox(type: AccessoryId) {
   if (!isCustom(type)) return ART_VIEWBOX[type]
   const a = accessory(type)

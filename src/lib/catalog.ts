@@ -33,7 +33,7 @@ export const ACCESSORIES: Accessory[] = [
   { id: 'hook', name: 'Hook', w: 6, h: 10, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Clips into two holes, one above the other' },
   { id: 'long-hook', name: 'Long hook', w: 3, h: 7, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Two holes, arm sticks straight out from the board' },
   { id: 'button', name: 'Button', w: 2.4, h: 2.4, pegs: [[0, 0]], top: 1.2, fixed: true, colors: ['white', 'gray'], detail: 'Round knob in a single hole' },
-  { id: 'shelf', name: 'Shelf', w: 28, h: 6, pegs: [[0, 0], [24, 0], [0, 4], [24, 4]], top: 1, left: 2, fixed: true, colors: ['black', 'white'], detail: '28 × 11 cm tray; each end clips into a top and a bottom hole' },
+  { id: 'shelf', name: 'Shelf', w: 28, h: 4.5, pegs: [[0, 0], [24, 0], [0, 4], [24, 4]], top: 1, left: 2, fixed: true, colors: ['black', 'white'], detail: '28 × 11 cm tray; each end clips into a top and a bottom hole' },
 ]
 
 export const BOARD_SIZES: Record<BoardSize, [number, number]> = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] }
