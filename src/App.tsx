@@ -13,7 +13,6 @@ import { BoardsPanel } from './components/BoardsPanel'
 import { Catalog } from './components/Catalog'
 import { HelpDialog } from './components/HelpDialog'
 import { Stage } from './components/Stage'
-import { Toast } from './components/Toast'
 
 const BANNER_MESSAGE = 'Made by ConnieCodes Using Devin by Cognition'
 
@@ -84,7 +83,7 @@ export default function App() {
   }, [latest])
 
   async function download() {
-    if (!await downloadPng(planner.layout)) planner.notify('Could not create an image')
+    await downloadPng(planner.layout)
   }
 
   const ghost = drag?.kind === 'piece' ? drag : null
@@ -116,7 +115,6 @@ export default function App() {
           <Art type={accessory(ghost.type)!.id} style={ghost.rotation === 90 ? { transform: 'rotate(90deg)' } : undefined} />
         </div>
       )}
-      <Toast message={planner.toast} />
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   )

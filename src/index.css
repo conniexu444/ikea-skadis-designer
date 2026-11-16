@@ -228,9 +228,7 @@ svg { flex: none; }
 .swatch.black { background: #34393c; }
 .swatch.wood { background: #c9a277; }
 
-/* Toast & dialog */
-.toast { position: fixed; z-index: 60; left: 50%; bottom: 24px; max-width: calc(100% - 32px); transform: translate(-50%, 16px); padding: 11px 16px; border-radius: 10px; background: var(--ink); color: var(--on-ink); font-size: 13px; font-weight: 500; box-shadow: 0 12px 30px #1d232b40; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
+/* Dialog */
 .help-dialog { width: min(460px, calc(100% - 32px)); padding: 28px; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px #1d232b4d; }
 .help-dialog::backdrop { background: #1d232b80; }
 .help-dialog h2 { font-size: 32px; margin-right: 32px; }
