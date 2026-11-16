@@ -12,12 +12,13 @@ interface Props {
   viewportRef: RefObject<HTMLDivElement | null>
   drag: Drag | null
   startPieceDrag: ReturnType<typeof useDrag>['startPieceDrag']
+  startEndDrag: ReturnType<typeof useDrag>['startEndDrag']
   startBoardDrag: ReturnType<typeof useDrag>['startBoardDrag']
 }
 
 const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+'
 
-export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startBoardDrag }: Props) {
+export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, startEndDrag, startBoardDrag }: Props) {
   const { layout, selectedItem } = planner
   const colorItem = selectedItem && !drag && accessory(selectedItem.type)!.colors ? selectedItem : null
   /** Last piece shown in the color panel, kept so the panel can fade out after deselecting. */
@@ -110,6 +111,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
                 selected={planner.highlightedBoardIds.has(board.id)} selectedIds={planner.selectedItemIds} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
+                onEndDown={startEndDrag}
                 toolsId={selectedItem && !drag ? selectedItem.id : null} onRotate={planner.rotateSelected}
               />
             ))}

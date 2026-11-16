@@ -1,8 +1,8 @@
 import { memo, type PointerEvent, type ReactNode } from 'react'
 import { BOARD_SIZES, accessory, plural, type Board, type BoardSize, type Item } from '../lib/catalog'
-import { HOLE_PITCH, allHoles, holePoint, itemPlacement, placement } from '../lib/holes'
+import { HOLE_PITCH, allHoles, cordPoints, holePoint, itemPlacement, placement } from '../lib/holes'
 import type { Drag } from '../hooks/useDrag'
-import { Art } from './Art'
+import { Art, CordArt } from './Art'
 
 function Slot({ size, col, row, className }: { size: BoardSize; col: number; row: number; className?: string }) {
   const [x, y] = holePoint(size, col, row)
@@ -27,12 +27,14 @@ interface Props {
   drag: Drag | null
   onGripDown: (event: PointerEvent, boardId: string) => void
   onItemDown: (event: PointerEvent, item: Item) => void
+  /** Starts dragging one end of a stretchy piece (0 = anchor peg). */
+  onEndDown: (event: PointerEvent, item: Item, which: 0 | 1) => void
   /** Piece that shows the floating rotate button. */
   toolsId: string | null
   onRotate: () => void
 }
 
-export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown, toolsId, onRotate }: Props) {
+export function BoardView({ board, index, items, selected, selectedIds, drag, onGripDown, onItemDown, onEndDown, toolsId, onRotate }: Props) {
   const [bw, bh] = BOARD_SIZES[board.size]
   const moving = drag?.kind === 'board' && drag.id === board.id ? drag : null
   const group = drag?.kind === 'group' && drag.moved ? drag : null
@@ -41,7 +43,7 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
   const shifting = (item: Item) => group !== null && !groupBoard && group.itemIds.includes(item.id)
   const x = moving?.preview.x ?? board.x + (groupBoard ? group!.dx : 0), y = moving?.preview.y ?? board.y + (groupBoard ? group!.dy : 0)
   const target = drag?.kind === 'piece' && drag.target?.board.id === board.id ? drag.target : null
-  const preview = target && drag?.kind === 'piece' ? placement(board.size, drag.type, drag.rotation, target.col, target.row) : null
+  const preview = target && drag?.kind === 'piece' ? placement(board.size, drag.type, drag.rotation, target.col, target.row, drag.end) : null
   const pct = (n: number, of: number) => `${n / of * 100}%`
   const cm = (n: number) => `calc(${n} * var(--cm))`
 
@@ -50,7 +52,7 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
       className={`board-wrap ${selected ? 'selected-board' : ''} ${moving || groupBoard ? 'board-moving' : ''} ${moving?.preview.snapped ? 'board-snap' : ''}`}
       data-board-id={board.id}
       style={{ left: cm(x), top: cm(y), width: cm(bw), height: cm(bh) }}
-      onPointerDown={event => { if (!(event.target as Element).closest('.board-item, .rotate-handle')) onGripDown(event, board.id) }}
+      onPointerDown={event => { if (!(event.target as Element).closest('.board-item, .rotate-handle, .cord-end')) onGripDown(event, board.id) }}
     >
       <button className="board-grip" type="button" data-grip={board.id} aria-label={`Drag board ${index + 1} to move it`}>
         <span className="grip-dots" aria-hidden="true">⠿</span> Board {index + 1}
@@ -60,19 +62,23 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
         <Holes size={board.size} />
         <div className="board-items">
           {items.map(item => {
-            const a = accessory(item.type)!, [ix, iy, w, h] = itemPlacement(item, board.size).rect
+            const stretching = drag?.kind === 'end' && drag.id === item.id && drag.target ? drag.target : null
+            const shown = stretching ? { ...item, col: stretching.col, row: stretching.row, end: stretching.end } : item
+            const a = accessory(item.type)!, [ix, iy, w, h] = itemPlacement(shown, board.size).rect
             return (
               <div
                 key={item.id}
-                className={`board-item ${selectedIds.has(item.id) ? 'selected' : ''} ${drag?.kind === 'piece' && drag.id === item.id ? 'dragging' : ''}`}
+                className={`board-item ${a.stretch ? 'stretch' : ''} ${stretching?.issue ? 'blocked' : ''} ${selectedIds.has(item.id) ? 'selected' : ''} ${drag?.kind === 'piece' && drag.id === item.id ? 'dragging' : ''}`}
                 data-id={item.id} tabIndex={0} role="button"
                 aria-label={`${a.name}, uses ${plural(a.pegs.length, 'hole')}, select and drag to move`}
                 style={{ left: pct(ix, bw), top: pct(iy, bh), width: pct(w, bw), height: pct(h, bh), transform: shifting(item) ? `translate(${cm(group!.dc * HOLE_PITCH)}, ${cm(group!.dr * HOLE_PITCH)})` : undefined }}
                 onPointerDown={event => onItemDown(event, item)}
               >
-                <Art type={item.type} color={item.color} style={item.rotation === 90
-                  ? { position: 'absolute', left: '50%', top: '50%', width: pct(a.w, w), height: pct(a.h, h), transform: 'translate(-50%,-50%) rotate(90deg)' }
-                  : undefined} />
+                {a.stretch
+                  ? <CordArt points={cordPoints(item.type, shown.end)} w={w} h={h} />
+                  : <Art type={item.type} color={item.color} style={item.rotation === 90
+                    ? { position: 'absolute', left: '50%', top: '50%', width: pct(a.w, w), height: pct(a.h, h), transform: 'translate(-50%,-50%) rotate(90deg)' }
+                    : undefined} />}
               </div>
             )
           })}
@@ -87,6 +93,16 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
               </button>
             )
           })}
+          {items.filter(item => item.id === toolsId && accessory(item.type)!.stretch).flatMap(item => itemPlacement(item, board.size).holes.map(([col, row], which) => {
+            const [hx, hy] = holePoint(board.size, col, row)
+            return (
+              <button
+                key={`${item.id}-${which}`} type="button" className="cord-end" title="Drag to another hole"
+                aria-label={`Drag ${which ? 'second' : 'first'} end of ${accessory(item.type)!.name} to another hole`}
+                style={{ left: pct(hx, bw), top: pct(hy, bh) }} onPointerDown={event => onEndDown(event, item, which as 0 | 1)}
+              />
+            )
+          }))}
         </div>
         <SvgLayer size={board.size} className="board-pegs">
           {preview && target && (

@@ -99,6 +99,11 @@ export function usePlanner() {
     setChosenBoardId(boardId)
   }
 
+  /** Re-hangs a stretchy piece between new holes; `end` is its second peg relative to (col, row). */
+  function stretchItem(id: string, col: number, row: number, end: [number, number]) {
+    commit(draft => { Object.assign(draft.items.find(entry => entry.id === id)!, { col, row, end }) })
+  }
+
   function removeSelected() {
     if (!selectedItem) return
     commit(draft => { draft.items = draft.items.filter(entry => entry.id !== selectedItem.id) })
@@ -107,7 +112,7 @@ export function usePlanner() {
   function duplicateSelected() {
     if (!selectedItem) return
     const board = layout.boards.find(entry => entry.id === selectedItem.boardId)!
-    const spot = findSpot(board, layout.items, selectedItem.type, selectedItem.rotation, [selectedItem.col + 2, selectedItem.row + 2])
+    const spot = findSpot(board, layout.items, selectedItem.type, selectedItem.rotation, [selectedItem.col + 2, selectedItem.row + 2], null, selectedItem.end)
     if (!spot) return
     const id = nextId()
     commit(draft => { draft.items.push({ ...selectedItem, id, col: spot[0], row: spot[1] }) })
@@ -131,7 +136,7 @@ export function usePlanner() {
     if (!selectedItem) return
     const item = selectedItem, board = layout.boards.find(entry => entry.id === item.boardId)!, used = usedHoles(layout.items, board, item.id)
     for (let n = holes; n < 60; n++) {
-      const col = item.col + dx * 2 * n, row = item.row + dy * 2 * n, issue = placementIssue(board, item.type, item.rotation, col, row, used)
+      const col = item.col + dx * 2 * n, row = item.row + dy * 2 * n, issue = placementIssue(board, item.type, item.rotation, col, row, used, item.end)
       if (issue === 'edge') break
       if (!issue) { commit(draft => { Object.assign(draft.items.find(entry => entry.id === item.id)!, { col, row }) }); return }
     }
@@ -222,7 +227,7 @@ export function usePlanner() {
       const { item } = clipboard, board = currentBoard
       if (!accessory(item.type)) return
       const start: Hole = item.boardId === board.id ? [item.col + 2, item.row + 2] : [item.col, item.row]
-      const spot = findSpot(board, layout.items, item.type, item.rotation, start)
+      const spot = findSpot(board, layout.items, item.type, item.rotation, start, null, item.end)
       if (!spot) return
       const pasted = { ...item, id: nextId(), boardId: board.id, col: spot[0], row: spot[1] }
       commit(draft => { draft.items.push(pasted) })
@@ -266,7 +271,7 @@ export function usePlanner() {
     const fixed = layout.items.filter(item => !loose.has(item.id)), movedItems: Item[] = []
     for (const item of layout.items.filter(entry => loose.has(entry.id))) {
       const board = layout.boards.find(entry => entry.id === item.boardId)!, next = { ...item, col: item.col + dc, row: item.row + dr }
-      const issue = placementIssue(board, item.type, item.rotation, next.col, next.row, usedHoles([...fixed, ...movedItems], board))
+      const issue = placementIssue(board, item.type, item.rotation, next.col, next.row, usedHoles([...fixed, ...movedItems], board), item.end)
       if (issue) return false
       movedItems.push(next)
     }
@@ -302,7 +307,7 @@ export function usePlanner() {
         if (newBoardId) { items.push({ ...item, id: nextId(), boardId: newBoardId }); continue }
         const board = draft.boards.find(entry => entry.id === item.boardId) ?? draft.boards.find(entry => entry.id === currentBoard.id)!
         const start: Hole = board.id === item.boardId ? [item.col + 2, item.row + 2] : [item.col, item.row]
-        const spot = findSpot(board, [...draft.items, ...items], item.type, item.rotation, start)
+        const spot = findSpot(board, [...draft.items, ...items], item.type, item.rotation, start, null, item.end)
         if (!spot) { skipped++; continue }
         items.push({ ...item, id: nextId(), boardId: board.id, col: spot[0], row: spot[1] })
       }
@@ -319,7 +324,7 @@ export function usePlanner() {
     canUndo: history.past.length > 0, canRedo: history.future.length > 0, undo, redo, replace,
     selectedId, selectedItem, selectedBoardId, currentBoard, boardHighlighted, selectBoard, selectItem, clearSelection,
     groupSelection, selectedItemIds, highlightedBoardIds, selectArea, moveGroup, removeGroup, duplicateGroup,
-    addAccessory, saveCustom, removeCustom, moveItem, removeSelected, duplicateSelected, rotateSelected, colorSelected, nudgeSelected, clearItems,
+    addAccessory, saveCustom, removeCustom, moveItem, stretchItem, removeSelected, duplicateSelected, rotateSelected, colorSelected, nudgeSelected, clearItems,
     changeSize, changeColor, addBoard, removeBoard, moveBoard, copySelection, paste,
   }
 }

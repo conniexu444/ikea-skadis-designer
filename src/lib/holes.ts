@@ -47,8 +47,13 @@ export function allHoles(size: BoardSize): Hole[] {
 }
 
 /** Peg offsets and bounding rect, in cm, relative to the piece's anchor peg. */
-export function geometry(type: string, rotation: Rotation = 0) {
+export function geometry(type: string, rotation: Rotation = 0, end?: Hole) {
   const a = accessory(type)!
+  if (a.stretch) {
+    const [dc, dr] = end ?? [a.pegs[1][0] / HOLE_PITCH, a.pegs[1][1] / HOLE_PITCH], dx = dc * HOLE_PITCH, dy = dr * HOLE_PITCH, pad = a.h / 2
+    const pegs: [number, number][] = [[0, 0], [dx, dy]]
+    return { pegs, rect: [Math.min(0, dx) - pad, Math.min(0, dy) - pad, Math.abs(dx) + 2 * pad, Math.abs(dy) + 2 * pad] as [number, number, number, number] }
+  }
   const xs = a.pegs.map(peg => peg[0]), ys = a.pegs.map(peg => peg[1])
   const ox = a.left === undefined ? (Math.min(...xs) + Math.max(...xs)) / 2 - a.w / 2 : Math.min(...xs) - a.left, oy = Math.min(...ys) - (a.top ?? 1.5)
   const pegs = a.pegs.map(([x, y]) => (rotation === 90 ? [-y, x] : [x, y]) as [number, number])
@@ -56,15 +61,21 @@ export function geometry(type: string, rotation: Rotation = 0) {
   return { pegs, rect }
 }
 
-export function placement(size: BoardSize, type: string, rotation: Rotation, col: number, row: number) {
-  const { pegs, rect } = geometry(type, rotation), [ax, ay] = holePoint(size, col, row)
+/** A stretchy piece's two peg points, in cm from the top-left of its rect. */
+export function cordPoints(type: string, end?: Hole) {
+  const { pegs, rect } = geometry(type, 0, end)
+  return pegs.map(([x, y]) => [x - rect[0], y - rect[1]] as [number, number])
+}
+
+export function placement(size: BoardSize, type: string, rotation: Rotation, col: number, row: number, end?: Hole) {
+  const { pegs, rect } = geometry(type, rotation, end), [ax, ay] = holePoint(size, col, row)
   return {
     holes: pegs.map(([x, y]) => [col + x / HOLE_PITCH, row + y / HOLE_PITCH] as Hole),
     rect: [ax + rect[0], ay + rect[1], rect[2], rect[3]] as [number, number, number, number],
   }
 }
 
-export const itemPlacement = (item: Item, size: BoardSize) => placement(size, item.type, item.rotation, item.col, item.row)
+export const itemPlacement = (item: Item, size: BoardSize) => placement(size, item.type, item.rotation, item.col, item.row, item.end)
 
 export function usedHoles(items: Item[], board: Board, ignoreId: string | null = null) {
   const used = new Set<string>()
@@ -75,14 +86,14 @@ export function usedHoles(items: Item[], board: Board, ignoreId: string | null =
 }
 
 /** A piece fits when every peg is on a free hole; its body may hang past the board edge. */
-export function placementIssue(board: Board, type: string, rotation: Rotation, col: number, row: number, used: Set<string>): PlacementIssue | null {
-  const { holes } = placement(board.size, type, rotation, col, row)
+export function placementIssue(board: Board, type: string, rotation: Rotation, col: number, row: number, used: Set<string>, end?: Hole): PlacementIssue | null {
+  const { holes } = placement(board.size, type, rotation, col, row, end)
   if (!holes.every(([c, r]) => holeExists(board.size, c, r))) return 'edge'
   return holes.some(([c, r]) => used.has(holeKey(c, r))) ? 'taken' : null
 }
 
-function onBoard(board: Board, type: string, rotation: Rotation, col: number, row: number) {
-  const [x, y, w, h] = placement(board.size, type, rotation, col, row).rect, [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6
+function onBoard(board: Board, type: string, rotation: Rotation, col: number, row: number, end?: Hole) {
+  const [x, y, w, h] = placement(board.size, type, rotation, col, row, end).rect, [bw, bh] = BOARD_SIZES[board.size], eps = 1e-6
   return x >= -eps && y >= -eps && x + w <= bw + eps && y + h <= bh + eps
 }
 
@@ -101,23 +112,34 @@ export function nearestHole(size: BoardSize, x: number, y: number): Hole {
 }
 
 /** The anchor hole closest to a piece whose top-left corner is at (x, y) cm, among those where every peg lands on a hole. */
-export function anchorFor(size: BoardSize, type: string, rotation: Rotation, x: number, y: number): Hole {
-  const { rect } = geometry(type, rotation), [tx, ty] = [x - rect[0], y - rect[1]]
+export function anchorFor(size: BoardSize, type: string, rotation: Rotation, x: number, y: number, end?: Hole): Hole {
+  const { rect } = geometry(type, rotation, end), [tx, ty] = [x - rect[0], y - rect[1]]
   let best: Hole | null = null, bestDistance = Infinity
   for (const [col, row] of allHoles(size)) {
     const [hx, hy] = holePoint(size, col, row), distance = Math.hypot(hx - tx, hy - ty)
-    if (distance < bestDistance && placement(size, type, rotation, col, row).holes.every(([c, r]) => holeExists(size, c, r))) { best = [col, row]; bestDistance = distance }
+    if (distance < bestDistance && placement(size, type, rotation, col, row, end).holes.every(([c, r]) => holeExists(size, c, r))) { best = [col, row]; bestDistance = distance }
   }
   return best ?? nearestHole(size, tx, ty)
 }
 
-export function findSpot(board: Board, items: Item[], type: string, rotation: Rotation, near: Hole | null = null, ignoreId: string | null = null): Hole | null {
+export function findSpot(board: Board, items: Item[], type: string, rotation: Rotation, near: Hole | null = null, ignoreId: string | null = null, end?: Hole): Hole | null {
   const used = usedHoles(items, board, ignoreId)
   let holes = allHoles(board.size)
   if (near) holes = [...holes].sort((a, b) => Math.hypot(a[0] - near[0], (a[1] - near[1]) * 1.01) - Math.hypot(b[0] - near[0], (b[1] - near[1]) * 1.01))
-  const free = holes.filter(([col, row]) => !placementIssue(board, type, rotation, col, row, used))
+  const free = holes.filter(([col, row]) => !placementIssue(board, type, rotation, col, row, used, end))
   // Automatic placement keeps pieces on the board when it can; only dragging deliberately hangs them off.
-  return free.find(([col, row]) => onBoard(board, type, rotation, col, row)) ?? free[0] ?? null
+  return free.find(([col, row]) => onBoard(board, type, rotation, col, row, end)) ?? free[0] ?? null
+}
+
+/** Where a stretchy piece lands when one of its ends (0 = anchor peg, 1 = the other) is dragged to `hole`. */
+export function moveEnd(board: Board, items: Item[], item: Item, which: 0 | 1, hole: Hole) {
+  const [first, second] = itemPlacement(item, board.size).holes, kept = which === 0 ? second : first
+  const [anchor, other] = which === 0 ? [hole, second] : [first, hole]
+  const end: Hole = [other[0] - anchor[0], other[1] - anchor[1]]
+  const issue: PlacementIssue | null = hole[0] === kept[0] && hole[1] === kept[1]
+    ? 'taken'
+    : placementIssue(board, item.type, 0, anchor[0], anchor[1], usedHoles(items, board, item.id), end)
+  return { col: anchor[0], row: anchor[1], end, issue }
 }
 
 export function holeStats(items: Item[], board: Board) {

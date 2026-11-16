@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { accessory } from './lib/catalog'
 import { downloadPng } from './lib/exportPng'
-import { HOLE_PITCH } from './lib/holes'
+import { HOLE_PITCH, cordPoints } from './lib/holes'
 import { overlapsAny, sharedLayout } from './lib/layout'
 import { useCamera } from './hooks/useCamera'
 import { useDrag } from './hooks/useDrag'
 import { useLatest } from './hooks/useLatest'
 import { usePlanner } from './hooks/usePlanner'
 import { AppBar } from './components/AppBar'
-import { Art } from './components/Art'
+import { Art, CordArt } from './components/Art'
 import { BoardsPanel } from './components/BoardsPanel'
 import { Catalog } from './components/Catalog'
 import { CustomAccessories } from './components/CustomAccessories'
@@ -24,7 +24,7 @@ export default function App() {
   const planner = usePlanner()
   const viewportRef = useRef<HTMLDivElement>(null)
   const camera = useCamera(viewportRef, planner.layout.boards)
-  const { drag, startPieceDrag, startBoardDrag } = useDrag(planner, camera.camera.scale)
+  const { drag, startPieceDrag, startEndDrag, startBoardDrag } = useDrag(planner, camera.camera.scale)
   const [helpOpen, setHelpOpen] = useState(planner.firstVisit)
   const latest = useLatest({ planner, helpOpen })
 
@@ -108,7 +108,7 @@ export default function App() {
             <CustomAccessories planner={planner} onStartDrag={(event, type) => startPieceDrag(event, type)} />
             <HowTo />
           </aside>
-          <Stage planner={planner} camera={camera} viewportRef={viewportRef} drag={drag} startPieceDrag={startPieceDrag} startBoardDrag={startBoardDrag} />
+          <Stage planner={planner} camera={camera} viewportRef={viewportRef} drag={drag} startPieceDrag={startPieceDrag} startEndDrag={startEndDrag} startBoardDrag={startBoardDrag} />
         </main>
       </div>
       {ghost && (
@@ -116,7 +116,9 @@ export default function App() {
           width: ghost.w * ghost.pxPerCm, height: ghost.h * ghost.pxPerCm,
           left: ghost.clientX - ghost.w * ghost.pxPerCm / 2, top: ghost.clientY - ghost.h * ghost.pxPerCm / 2,
         }}>
-          <Art type={accessory(ghost.type)!.id} color={planner.layout.items.find(item => item.id === ghost.id)?.color} style={ghost.rotation === 90 ? { transform: 'rotate(90deg)' } : undefined} />
+          {accessory(ghost.type)!.stretch
+            ? <CordArt points={cordPoints(ghost.type, ghost.end)} w={ghost.w} h={ghost.h} />
+            : <Art type={accessory(ghost.type)!.id} color={planner.layout.items.find(item => item.id === ghost.id)?.color} style={ghost.rotation === 90 ? { transform: 'rotate(90deg)' } : undefined} />}
         </div>
       )}
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
