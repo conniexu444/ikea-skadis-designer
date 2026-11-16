@@ -49,6 +49,12 @@ describe('hole occupancy', () => {
     expect(placementIssue(board, 'hook', 0, 4, 26, new Set())).toBe('edge')
   })
 
+  it('keeps a long hook on the same two stacked holes without reaching below them', () => {
+    const long = placement(board.size, 'long-hook', 0, 4, 6), hook = placement(board.size, 'hook', 0, 4, 6)
+    expect(long.holes).toEqual(hook.holes)
+    expect(long.rect[1] + long.rect[3]).toBeLessThan(hook.rect[1] + hook.rect[3])
+  })
+
   it('refuses pegs that miss a hole', () => {
     expect(placementIssue(board, 'wall-mount', 0, 1, 0, new Set())).toBe('edge')
   })
