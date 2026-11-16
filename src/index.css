@@ -208,7 +208,6 @@ svg { flex: none; }
 .panel-toggle .chevron { width: 7px; height: 7px; border-right: 2px solid var(--accent-ink); border-bottom: 2px solid var(--accent-ink); transform: translateY(-2px) rotate(45deg); transition: transform .25s ease; }
 .collapsed .panel-toggle .chevron { transform: rotate(-45deg); }
 .custom-panel { flex: 1; }
-.custom-empty { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .custom-card { padding-right: 78px; }
 .custom-actions { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: flex; gap: 2px; }
 .custom-actions .add-button { position: static; transform: none; font-size: 14px; }

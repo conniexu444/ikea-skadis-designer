@@ -101,7 +101,6 @@ export function CustomAccessories({ planner, onStartDrag }: Props) {
               ))}
             </div>
           )}
-          {!draft && pieces.length === 0 && <p className="custom-empty">Make your own piece: set its size and pick the holes it clips into.</p>}
           {!draft && (
             <button type="button" className="button add-board" disabled={pieces.length >= MAX_CUSTOM} onClick={() => setDraft(EMPTY)}>+ New accessory</button>
           )}
