@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type RefObject } from 'react'
 import { areaSelection } from '../lib/layout'
+import { accessory } from '../lib/catalog'
 import { useCamera } from '../hooks/useCamera'
 import type { Drag, useDrag } from '../hooks/useDrag'
 import type { Planner } from '../hooks/usePlanner'
@@ -104,7 +105,7 @@ export function Stage({ planner, camera, viewportRef, drag, startPieceDrag, star
                 selected={planner.highlightedBoardIds.has(board.id)} selectedIds={planner.selectedItemIds} drag={drag}
                 onGripDown={startBoardDrag}
                 onItemDown={(event, item) => startPieceDrag(event, item.type, item.id)}
-                rotatableId={selectedItem && !drag ? selectedItem.id : null} onRotate={planner.rotateSelected}
+                rotatableId={selectedItem && !drag && !accessory(selectedItem.type)!.fixed ? selectedItem.id : null} onRotate={planner.rotateSelected}
               />
             ))}
           </div>

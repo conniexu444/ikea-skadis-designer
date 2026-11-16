@@ -80,7 +80,7 @@ export function sanitizeLayout(input: any): Layout | null {
   input.items.slice(0, 200).forEach((item: any, i: number) => {
     const a = accessory(item?.type)
     if (!a) return
-    const rotation = Number(item.rotation) === 90 ? 90 : 0
+    const rotation = !a.fixed && Number(item.rotation) === 90 ? 90 : 0
     // oxlint-disable-next-line typescript/no-explicit-any
     const boardIndex = Array.isArray(input.boards) ? input.boards.findIndex((board: any) => board?.id === item.boardId) : 0
     const board = boards[Math.max(0, Math.min(boardIndex, boards.length - 1))]

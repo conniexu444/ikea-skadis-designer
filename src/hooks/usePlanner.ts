@@ -113,7 +113,7 @@ export function usePlanner() {
     setSelectedId(id)
   }
   function rotateSelected() {
-    if (!selectedItem) return
+    if (!selectedItem || accessory(selectedItem.type)!.fixed) return
     const item = selectedItem, board = layout.boards.find(entry => entry.id === item.boardId)!, rotation = item.rotation === 90 ? 0 : 90
     const spot = placementIssue(board, item.type, rotation, item.col, item.row, usedHoles(layout.items, board, item.id))
       ? findSpot(board, layout.items, item.type, rotation, [item.col, item.row], item.id)

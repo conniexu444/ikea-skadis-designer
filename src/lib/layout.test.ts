@@ -25,6 +25,11 @@ describe('sanitizeLayout', () => {
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ type: 'rocket', col: 2, row: 2 }] })!
     expect(layout.items).toEqual([])
   })
+
+  it('loads a hook upright even if the saved layout has it rotated', () => {
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'hook', boardId: 'board-1', type: 'hook', col: 6, row: 6, rotation: 90 }] })!
+    expect(layout.items[0].rotation).toBe(0)
+  })
 })
 
 describe('refitItems', () => {
