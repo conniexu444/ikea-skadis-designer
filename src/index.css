@@ -71,6 +71,7 @@ svg { flex: none; }
 .sponsor-banner { overflow: hidden; background: var(--banner); color: #fff; font: 400 14px/26px 'DotGothic16', var(--font); letter-spacing: .02em; white-space: nowrap; }
 .sponsor-track { display: flex; width: max-content; animation: sponsor-scroll 120s linear infinite; }
 .sponsor-track span { padding-right: 60vw; }
+.sponsor-banner:hover .sponsor-track { animation-play-state: paused; }
 @keyframes sponsor-scroll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .sponsor-track, .brand:hover .brand-char, .rotate-handle { animation: none; } .color-panel, .panel-collapse, .panel-toggle .chevron, .theme-switch, .theme-switch-knob { transition: none; } }
 .appbar { display: flex; align-items: center; gap: 20px; padding: 0 16px 0 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
