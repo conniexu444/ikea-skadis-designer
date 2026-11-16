@@ -36,11 +36,11 @@ describe('sanitizeLayout', () => {
     expect(layout.items.map(item => item.color)).toEqual(['white', undefined, undefined])
   })
 
-  it('hangs a shelf on two holes in the same row, 24 cm apart', () => {
+  it('hangs a shelf on a top and a bottom hole at each end, 7 holes apart', () => {
     const board = DEFAULT_LAYOUT.boards[0]
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 's', boardId: board.id, type: 'shelf', col: 2, row: 6, rotation: 90, color: 'white' }] })!
     expect(layout.items[0]).toMatchObject({ col: 2, row: 6, rotation: 0, color: 'white' })
-    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '2,6'])
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '14,8', '2,6', '2,8'])
   })
 
   it('loads a hook upright even if the saved layout has it rotated', () => {
