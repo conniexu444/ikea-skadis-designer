@@ -1,6 +1,18 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 
 const BRAND_WORDS = ['Pegboard', 'Designer']
+const THEME_KEY = 'pegboard-theme'
+
+function useTheme() {
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark')
+  function toggle() {
+    const next = dark ? 'light' : 'dark'
+    document.documentElement.dataset.theme = next
+    try { localStorage.setItem(THEME_KEY, next) } catch { /* storage unavailable */ }
+    setDark(!dark)
+  }
+  return [dark, toggle] as const
+}
 
 interface Props {
   saveFailed: boolean
@@ -12,6 +24,7 @@ interface Props {
 }
 
 export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownload }: Props) {
+  const [dark, toggleTheme] = useTheme()
   return (
     <header className="appbar">
       <div className="brand">
@@ -33,6 +46,14 @@ export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownloa
         {saveFailed && <span className="save-status" role="status">Storage unavailable — download your layout</span>}
       </div>
       <div className="appbar-actions">
+        <button
+          type="button" className="icon-button theme-toggle" aria-pressed={dark}
+          title={dark ? 'Switch to light mode' : 'Switch to dark mode'} aria-label="Dark mode" onClick={toggleTheme}
+        >
+          {dark
+            ? <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+            : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>}
+        </button>
         <div className="button-group" role="group" aria-label="History">
           <button type="button" className="icon-button" title="Undo (Ctrl+Z)" aria-label="Undo" disabled={!canUndo} onClick={onUndo}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5" /><path d="M4 12h11a5 5 0 0 1 0 10h-3" /></svg>
