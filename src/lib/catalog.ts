@@ -1,9 +1,9 @@
 export type BoardSize = '36x56' | '56x56' | '76x56'
 export type Finish = 'white' | 'black' | 'wood'
 export type Rotation = 0 | 90
-export type BuiltinId = 'wall-mount' | 'hook' | 'long-hook' | 'button'
+export type BuiltinId = 'wall-mount' | 'hook' | 'long-hook' | 'button' | 'shelf'
 export type AccessoryId = BuiltinId | `custom-${string}`
-export type PieceColor = 'white' | 'gray'
+export type PieceColor = 'white' | 'gray' | 'black'
 
 export interface Accessory {
   id: AccessoryId
@@ -33,6 +33,7 @@ export const ACCESSORIES: Accessory[] = [
   { id: 'hook', name: 'Hook', w: 6, h: 10, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Clips into two holes, one above the other' },
   { id: 'long-hook', name: 'Long hook', w: 3, h: 7, pegs: [[0, 0], [0, 4]], fixed: true, colors: ['gray', 'white'], detail: 'Two holes, arm sticks straight out from the board' },
   { id: 'button', name: 'Button', w: 2.4, h: 2.4, pegs: [[0, 0]], top: 1.2, fixed: true, colors: ['white', 'gray'], detail: 'Round knob in a single hole' },
+  { id: 'shelf', name: 'Shelf', w: 28, h: 4.5, pegs: [[0, 0], [24, 0]], top: 1, left: 2, fixed: true, colors: ['black', 'white'], detail: '28 × 11 cm tray on two hooks in the same row' },
 ]
 
 export const BOARD_SIZES: Record<BoardSize, [number, number]> = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] }
@@ -77,7 +78,7 @@ export function sanitizeCustom(input: any): Accessory[] {
   }
   return result
 }
-export const COLOR_NAMES: Record<PieceColor, string> = { white: 'White', gray: 'Dark gray' }
+export const COLOR_NAMES: Record<PieceColor, string> = { white: 'White', gray: 'Dark gray', black: 'Black' }
 /** The piece's color, falling back to its default; undefined for pieces that come in one color. */
 export function pieceColor(type: AccessoryId, color?: PieceColor): PieceColor | undefined {
   const colors = accessory(type)?.colors
