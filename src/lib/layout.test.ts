@@ -43,6 +43,17 @@ describe('sanitizeLayout', () => {
     expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '14,8', '2,6', '2,8'])
   })
 
+  it('stretches an elastic cord between two holes in a row, or a column when rotated', () => {
+    const board = DEFAULT_LAYOUT.boards[0]
+    const items = [
+      { id: 'a', boardId: board.id, type: 'elastic-cord', col: 2, row: 6, rotation: 0, color: 'white' },
+      { id: 'b', boardId: board.id, type: 'elastic-cord', col: 20, row: 2, rotation: 90 },
+    ]
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items })!
+    expect(layout.items.map(item => [item.rotation, item.color])).toEqual([[0, undefined], [90, undefined]])
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '2,6', '20,14', '20,2'])
+  })
+
   it('hangs a cup on two neighboring holes in a row and a clip on one', () => {
     const board = DEFAULT_LAYOUT.boards[0]
     const items = [

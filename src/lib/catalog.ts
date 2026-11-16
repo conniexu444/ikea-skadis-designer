@@ -1,7 +1,7 @@
 export type BoardSize = '36x56' | '56x56' | '76x56'
 export type Finish = 'white' | 'black' | 'wood'
 export type Rotation = 0 | 90
-export type BuiltinId = 'wall-mount' | 'hook' | 'long-hook' | 'button' | 'shelf' | 'cup' | 'clip'
+export type BuiltinId = 'wall-mount' | 'hook' | 'long-hook' | 'button' | 'shelf' | 'cup' | 'clip' | 'elastic-cord'
 export type AccessoryId = BuiltinId | `custom-${string}`
 export type PieceColor = 'white' | 'gray' | 'black'
 
@@ -36,6 +36,7 @@ export const ACCESSORIES: Accessory[] = [
   { id: 'shelf', name: 'Shelf', w: 28, h: 4.5, pegs: [[0, 0], [24, 0], [0, 4], [24, 4]], top: 1, left: 2, fixed: true, colors: ['black', 'white'], detail: '28 × 11 cm tray; each end clips into a top and a bottom hole' },
   { id: 'cup', name: 'Cup', w: 7.6, h: 8.3, pegs: [[0, 0], [4, 0]], top: 1, fixed: true, colors: ['black', 'white'], detail: '7.6 × 8.9 cm container on two hooks in the same row' },
   { id: 'clip', name: 'Clip', w: 1.9, h: 8.3, pegs: [[0, 0]], top: 1, fixed: true, colors: ['black', 'white'], detail: 'Spring clip for notes and photos, one hole' },
+  { id: 'elastic-cord', name: 'Elastic cord', w: 27.3, h: 1.6, pegs: [[0, 0], [24, 0]], top: 0.8, left: 1.65, detail: '27 cm gray cord; a peg at each end clips into a hole' },
 ]
 
 export const BOARD_SIZES: Record<BoardSize, [number, number]> = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] }

@@ -21,6 +21,8 @@ const DRAW: Record<BuiltinId, (shade: Shade) => string> = {
   cup: s => [18, 58].map(x => `<path d="M${x - 5} 10V8a5 5 0 0 1 10 0v2" fill="none" stroke="${s.edge}" stroke-width="3" stroke-linecap="round"/>`).join('')
     + `<rect x="1" y="6" width="74" height="76" rx="13" fill="${s.body}" stroke="${s.edge}" stroke-width="1.5"/><rect x="6" y="10" width="64" height="7" rx="3.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
   clip: s => `<rect x="1" y="1" width="17" height="81" rx="8.5" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/><rect x="4" y="4" width="11" height="44" rx="5.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.8"/><circle cx="16" cy="52" r="2.2" fill="#b8bcbf" stroke="#7d8286" stroke-width="0.6"/>`,
+  'elastic-cord': () => `<path d="M16.5 8H256.5" stroke="#3f4447" stroke-width="5" stroke-linecap="round"/><path d="M16.5 8H256.5" stroke="#7a7f83" stroke-width="3" stroke-linecap="round"/>`
+    + [16.5, 256.5].map(x => `<circle cx="${x}" cy="8" r="7" fill="#575c60" stroke="#33373a" stroke-width="1.5"/><circle cx="${x}" cy="8" r="3" fill="#4b5053"/>`).join(''),
   button: s => `<circle cx="12" cy="12" r="11" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/><circle cx="12" cy="12" r="7.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
 }
 
@@ -38,7 +40,7 @@ function drawCustom(type: AccessoryId, shade: Shade) {
 export const art = (type: AccessoryId, color: PieceColor = 'gray') => isCustom(type) ? drawCustom(type, SHADES[color]) : DRAW[type](SHADES[color])
 
 /** Each drawing's viewBox matches its accessory's w×h at 10 units per cm, so it fills its footprint without distortion. */
-const ART_VIEWBOX: Record<BuiltinId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24', shelf: '0 0 280 45', cup: '0 0 76 83', clip: '0 0 19 83' }
+const ART_VIEWBOX: Record<BuiltinId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24', shelf: '0 0 280 45', cup: '0 0 76 83', clip: '0 0 19 83', 'elastic-cord': '0 0 273 16' }
 export function artViewBox(type: AccessoryId) {
   if (!isCustom(type)) return ART_VIEWBOX[type]
   const a = accessory(type)
