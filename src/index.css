@@ -177,8 +177,6 @@ svg { flex: none; }
 .rotate-handle:hover { background: var(--accent-soft); color: var(--accent-ink); }
 .rotate-handle svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @keyframes pop-in { from { opacity: 0; transform: translateX(-50%) scale(.6); } }
-.board-pegs .peg { fill: var(--peg); stroke: #9a7419; stroke-width: 1px; }
-.board-pegs .peg.active { fill: var(--accent); stroke: #fff; }
 .peg-preview .preview-body { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5px; stroke-dasharray: 4 3; }
 .peg-preview .preview-peg { fill: var(--accent); stroke: #fff; stroke-width: 1px; }
 .peg-preview.blocked .preview-body { fill: #d1493f1f; stroke: var(--danger); }

@@ -90,9 +90,6 @@ export function BoardView({ board, index, items, selected, selectedIds, drag, on
           })}
         </div>
         <SvgLayer size={board.size} className="board-pegs">
-          {items.filter(item => item.type !== 'wall-mount' && !shifting(item)).flatMap(item => itemPlacement(item, board.size).holes.map(([col, row]) => (
-            <Slot key={`${item.id}-${col},${row}`} size={board.size} col={col} row={row} className={`peg ${selectedIds.has(item.id) ? 'active' : ''}`} />
-          )))}
           {preview && target && (
             <g className={`peg-preview ${target.issue ? 'blocked' : 'open'}`}>
               <rect className="preview-body" x={preview.rect[0]} y={preview.rect[1]} width={preview.rect[2]} height={preview.rect[3]} rx={0.6} vectorEffect="non-scaling-stroke" />
