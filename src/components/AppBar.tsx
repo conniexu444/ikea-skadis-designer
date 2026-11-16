@@ -2,12 +2,19 @@ import { useState, type CSSProperties } from 'react'
 
 const BRAND_WORDS = ['Pegboard', 'Designer']
 const THEME_KEY = 'pegboard-theme'
+const THEME_FADE_MS = 500
+let fadeTimer: ReturnType<typeof setTimeout> | undefined
 
 function useTheme() {
   const [dark, setDark] = useState(() => document.documentElement.dataset.theme === 'dark')
   function toggle() {
-    const next = dark ? 'light' : 'dark'
-    document.documentElement.dataset.theme = next
+    const next = dark ? 'light' : 'dark', root = document.documentElement
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('theme-fading')
+      clearTimeout(fadeTimer)
+      fadeTimer = setTimeout(() => root.classList.remove('theme-fading'), THEME_FADE_MS)
+    }
+    root.dataset.theme = next
     try { localStorage.setItem(THEME_KEY, next) } catch { /* storage unavailable */ }
     setDark(!dark)
   }

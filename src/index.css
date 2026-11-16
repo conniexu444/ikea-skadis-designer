@@ -51,6 +51,9 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+.theme-fading, .theme-fading *:not(.theme-switch-knob), .theme-fading *::before, .theme-fading *::after {
+  transition: background-color .5s ease, color .5s ease, border-color .5s ease, fill .5s ease, stroke .5s ease, box-shadow .5s ease !important;
+}
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--font); -webkit-font-smoothing: antialiased; }
 button, input { font: inherit; color: inherit; }
