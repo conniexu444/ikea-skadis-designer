@@ -1,3 +1,7 @@
+import type { CSSProperties } from 'react'
+
+const BRAND_WORDS = ['Pegboard', 'Designer']
+
 interface Props {
   saveFailed: boolean
   canUndo: boolean
@@ -10,10 +14,21 @@ interface Props {
 export function AppBar({ saveFailed, canUndo, canRedo, onUndo, onRedo, onDownload }: Props) {
   return (
     <header className="appbar">
-      <a className="brand" href="./" aria-label="Pegboard Designer home">
+      <div className="brand">
         <span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /><i /></span>
-        <span className="brand-name">Pegboard <span>Designer</span></span>
-      </a>
+        <span className="brand-name">
+          <span className="visually-hidden">Pegboard Designer</span>
+          <span aria-hidden="true">
+            {BRAND_WORDS.map((word, w) => (
+              <span key={word} className="brand-word">
+                {[...word].map((ch, c) => (
+                  <span key={c} className="brand-char" style={{ '--i': w * 9 + c } as CSSProperties}>{ch}</span>
+                ))}
+              </span>
+            ))}
+          </span>
+        </span>
+      </div>
       <div className="layout-meta">
         {saveFailed && <span className="save-status" role="status">Storage unavailable — download your layout</span>}
       </div>
