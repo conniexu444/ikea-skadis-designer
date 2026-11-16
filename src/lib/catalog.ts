@@ -33,6 +33,8 @@ export const ACCESSORIES: Accessory[] = [
 ]
 
 export const BOARD_SIZES: Record<BoardSize, [number, number]> = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] }
+/** Width × height as IKEA US lists them. */
+export const BOARD_INCHES: Record<BoardSize, string> = { '36x56': '14¼ × 22', '56x56': '22 × 22', '76x56': '30 × 22' }
 export const FINISHES: Finish[] = ['white', 'black', 'wood']
 /** Boards sit on an open canvas; this only bounds coordinates read from untrusted saved/shared data, in cm. */
 export const CANVAS_LIMIT = 5000

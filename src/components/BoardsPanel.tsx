@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
+import { BOARD_INCHES, BOARD_SIZES, FINISHES, type BoardSize } from '../lib/catalog'
 import { MAX_BOARDS } from '../lib/layout'
 import type { Planner } from '../hooks/usePlanner'
 
@@ -32,7 +32,7 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
             <div key={board.id} className={`board-card ${active ? 'active' : ''}`}>
               <button className="board-select" type="button" aria-pressed={active} onClick={() => planner.selectBoard(board.id)}>
                 <strong>Board {i + 1}</strong>
-                <small>{board.size.replace('x', ' × ')} cm</small>
+                <small>{board.size.replace('x', ' × ')} cm · {BOARD_INCHES[board.size]}″</small>
               </button>
               {layout.boards.length > 1 && (
                 <button className="board-remove" type="button" aria-label={`Remove board ${i + 1}`} title="Remove board" onClick={() => planner.removeBoard(board.id)}>×</button>
@@ -44,11 +44,12 @@ export function BoardsPanel({ planner }: { planner: Planner }) {
       <button type="button" className="button add-board" disabled={layout.boards.length >= MAX_BOARDS} onClick={planner.addBoard}>+ Add board</button>
       <fieldset className="board-settings" disabled={!boardHighlighted}>
       <div className="field">
-        <span className="field-label">Size <small>cm</small></span>
+        <span className="field-label">Size <small>cm / in</small></span>
         <div className="segmented" role="group" aria-label="Selected board size">
           {(Object.keys(BOARD_SIZES) as BoardSize[]).map(size => (
             <button key={size} className={`size-choice ${boardHighlighted && size === currentBoard.size ? 'active' : ''}`} type="button" aria-pressed={boardHighlighted && size === currentBoard.size} onClick={() => planner.changeSize(size)}>
-              <span className={`size-graphic ${SIZE_GRAPHIC[size]}`} aria-hidden="true" />{size.replace('x', ' × ')}
+              <span className={`size-graphic ${SIZE_GRAPHIC[size]}`} aria-hidden="true" />
+              <span className="size-label">{size.replace('x', ' × ')}<small>{BOARD_INCHES[size]}″</small></span>
             </button>
           ))}
         </div>

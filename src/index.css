@@ -236,6 +236,9 @@ svg { flex: none; }
 .segmented button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; font-size: 12px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .segmented button:hover { color: var(--ink); }
 .segmented button.active { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-sm); }
+.size-choice.size-choice { height: 46px; gap: 5px; padding: 0 4px; }
+.size-label { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+.size-label small { font-size: 10.5px; font-weight: 500; color: var(--muted); }
 .size-graphic { height: 14px; border: 1.5px solid currentColor; border-radius: 2px; opacity: .7; }
 .size-graphic.narrow { width: 9px; }
 .size-graphic.square { width: 14px; }
