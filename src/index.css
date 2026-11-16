@@ -84,14 +84,12 @@ svg { flex: none; }
 .brand-name { font: 400 22px/1 var(--display); letter-spacing: .02em; }
 .brand-word + .brand-word { margin-left: .3em; color: var(--muted); }
 .brand-char { display: inline-block; }
-.brand:hover .brand-char { animation: brand-bounce .7s cubic-bezier(.3, 0, .3, 1) both; animation-delay: calc(var(--i) * 35ms); }
-@keyframes brand-bounce {
-  0% { transform: translateY(0); }
-  25% { transform: translateY(7px); }
-  45% { transform: translateY(-3px); }
-  65% { transform: translateY(2px); }
-  82% { transform: translateY(-1px); }
-  100% { transform: translateY(0); }
+.brand:hover .brand-char { animation: brand-drop .5s cubic-bezier(.3, 0, .3, 1) both; animation-delay: calc(var(--i) * 40ms); }
+@keyframes brand-drop {
+  0% { transform: translateY(-28px); opacity: 0; }
+  55% { transform: translateY(2px); opacity: 1; }
+  75% { transform: translateY(-2px); }
+  100% { transform: translateY(0); opacity: 1; }
 }
 .layout-meta { display: flex; align-items: center; min-width: 0; flex: 1; }
 .save-status { color: var(--danger); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
