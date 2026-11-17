@@ -1,7 +1,7 @@
 export type BoardSize = '36x56' | '56x56' | '76x56'
 export type Finish = 'white' | 'black' | 'wood'
 export type Rotation = 0 | 90
-export type BuiltinId = 'wall-mount' | 'hook' | 'long-hook' | 'button' | 'shelf' | 'cup' | 'clip' | 'elastic-cord'
+export type BuiltinId = 'wall-mount' | 'hook' | 'long-hook' | 'button' | 'shelf' | 'cup' | 'clip' | 'elastic-cord' | 'mx-holder'
 export type AccessoryId = BuiltinId | `custom-${string}`
 export type PieceColor = 'white' | 'gray' | 'black'
 
@@ -39,6 +39,7 @@ export const ACCESSORIES: Accessory[] = [
   { id: 'cup', name: 'Cup', w: 7.6, h: 8.3, pegs: [[0, 0], [4, 0]], top: 1, fixed: true, colors: ['black', 'white'], detail: '7.6 × 8.9 cm container on two hooks in the same row' },
   { id: 'clip', name: 'Clip', w: 1.9, h: 8.3, pegs: [[0, 0]], top: 1, fixed: true, colors: ['black', 'white'], detail: 'Spring clip for notes and photos, one hole' },
   { id: 'elastic-cord', name: 'Elastic cord', w: 27.3, h: 1.6, pegs: [[0, 0], [24, 0]], top: 0.8, left: 1.65, fixed: true, stretch: true, detail: '27 cm gray cord; drag either end to any hole' },
+  { id: 'mx-holder', name: 'MX Master holder', w: 9.45, h: 5.4, pegs: [[0, 0], [4, 0]], top: 0.3, left: 3.2, fixed: true, colors: ['black', 'white', 'gray'], detail: '3D-printed Logitech MX Master 3 holder; two hooks in the same row' },
 ]
 
 export const BOARD_SIZES: Record<BoardSize, [number, number]> = { '36x56': [36, 56], '56x56': [56, 56], '76x56': [76, 56] }
