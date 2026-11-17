@@ -95,6 +95,13 @@ describe('sanitizeLayout', () => {
     expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['20,10', '20,6', '20,8', '6,10', '6,6', '6,8'])
   })
 
+  it('hangs the controller holder on two neighboring holes in a row', () => {
+    const board = DEFAULT_LAYOUT.boards[0]
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'c', boardId: board.id, type: 'controller-holder', col: 6, row: 6, rotation: 90, color: 'white' }] })!
+    expect(layout.items.map(item => [item.rotation, item.color])).toEqual([[0, 'white']])
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['6,6', '8,6'])
+  })
+
   it('loads a hook upright even if the saved layout has it rotated', () => {
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'hook', boardId: 'board-1', type: 'hook', col: 6, row: 6, rotation: 90 }] })!
     expect(layout.items[0].rotation).toBe(0)
