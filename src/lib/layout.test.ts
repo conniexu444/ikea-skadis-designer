@@ -77,6 +77,13 @@ describe('sanitizeLayout', () => {
     expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['10,6', '2,6', '4,6'])
   })
 
+  it('hangs the MX Master holder on two neighboring holes in a row', () => {
+    const board = DEFAULT_LAYOUT.boards[0]
+    const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'mx', boardId: board.id, type: 'mx-holder', col: 6, row: 6, rotation: 90, color: 'gray' }] })!
+    expect(layout.items.map(item => [item.rotation, item.color])).toEqual([[0, 'gray']])
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['6,6', '8,6'])
+  })
+
   it('loads a hook upright even if the saved layout has it rotated', () => {
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items: [{ id: 'hook', boardId: 'board-1', type: 'hook', col: 6, row: 6, rotation: 90 }] })!
     expect(layout.items[0].rotation).toBe(0)
