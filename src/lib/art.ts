@@ -20,7 +20,7 @@ const DRAW: Record<BuiltinId, (shade: Shade) => string> = {
     + `<rect x="2" y="15" width="276" height="28" rx="11" fill="${s.body}" stroke="${s.edge}" stroke-width="2"/><rect x="10" y="19" width="260" height="6" rx="3" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
   cup: s => [18, 58].map(x => `<path d="M${x - 5} 10V8a5 5 0 0 1 10 0v2" fill="none" stroke="${s.edge}" stroke-width="3" stroke-linecap="round"/>`).join('')
     + `<rect x="1" y="6" width="74" height="76" rx="13" fill="${s.body}" stroke="${s.edge}" stroke-width="1.5"/><rect x="6" y="10" width="64" height="7" rx="3.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
-  clip: s => `<rect x="1" y="1" width="17" height="81" rx="8.5" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/><rect x="4" y="4" width="11" height="44" rx="5.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.8"/><circle cx="16" cy="52" r="2.2" fill="#b8bcbf" stroke="#7d8286" stroke-width="0.6"/>`,
+  clip: s => `<rect x="1" y="1" width="17" height="81" rx="8.5" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/>`,
   'elastic-cord': () => `<path d="M16.5 8H256.5" stroke="#3f4447" stroke-width="5" stroke-linecap="round"/><path d="M16.5 8H256.5" stroke="#7a7f83" stroke-width="3" stroke-linecap="round"/>`
     + [16.5, 256.5].map(x => `<circle cx="${x}" cy="8" r="7" fill="#575c60" stroke="#33373a" stroke-width="1.5"/><circle cx="${x}" cy="8" r="3" fill="#4b5053"/>`).join(''),
   'mx-holder': s => `<path d="M44 11V46q0 7 8 7q8 0 8-7V11" fill="${s.body}" stroke="${s.edge}" stroke-width="1"/><rect x="47" y="13" width="10" height="34" rx="5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.6"/>`
