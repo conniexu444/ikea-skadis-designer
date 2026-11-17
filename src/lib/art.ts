@@ -25,6 +25,8 @@ const DRAW: Record<BuiltinId, (shade: Shade) => string> = {
     + [16.5, 256.5].map(x => `<circle cx="${x}" cy="8" r="7" fill="#575c60" stroke="#33373a" stroke-width="1.5"/><circle cx="${x}" cy="8" r="3" fill="#4b5053"/>`).join(''),
   'mx-holder': s => `<path d="M44 11V46q0 7 8 7q8 0 8-7V11" fill="${s.body}" stroke="${s.edge}" stroke-width="1"/><rect x="47" y="13" width="10" height="34" rx="5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.6"/>`
     + `<rect x="0.5" y="0.5" width="93.5" height="11" rx="5.5" fill="${s.body}" stroke="${s.edge}" stroke-width="1"/><rect x="4" y="3" width="86.5" height="4" rx="2" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.6"/>`,
+  'keyboard-holder': s => `<rect x="0.5" y="0.5" width="9" height="98.4" rx="3" fill="${s.body}" stroke="${s.edge}" stroke-width="0.8"/><rect x="3" y="4" width="4" height="64" rx="2" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.5"/>`
+    + `<rect x="1.5" y="76" width="7" height="20" rx="2.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="0.6"/>`,
   button: s => `<circle cx="12" cy="12" r="11" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/><circle cx="12" cy="12" r="7.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
 }
 
@@ -49,7 +51,7 @@ function drawCustom(type: AccessoryId, shade: Shade) {
 export const art = (type: AccessoryId, color: PieceColor = 'gray') => isCustom(type) ? drawCustom(type, SHADES[color]) : DRAW[type](SHADES[color])
 
 /** Each drawing's viewBox matches its accessory's w×h at 10 units per cm, so it fills its footprint without distortion. */
-const ART_VIEWBOX: Record<BuiltinId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24', shelf: '0 0 280 45', cup: '0 0 76 83', clip: '0 0 19 83', 'elastic-cord': '0 0 273 16', 'mx-holder': '0 0 94.5 54' }
+const ART_VIEWBOX: Record<BuiltinId, string> = { 'wall-mount': '0 0 100 100', hook: '0 0 60 100', 'long-hook': '0 0 30 70', button: '0 0 24 24', shelf: '0 0 280 45', cup: '0 0 76 83', clip: '0 0 19 83', 'elastic-cord': '0 0 273 16', 'mx-holder': '0 0 94.5 54', 'keyboard-holder': '0 0 10 99.4' }
 export function artViewBox(type: AccessoryId) {
   if (!isCustom(type)) return ART_VIEWBOX[type]
   const a = accessory(type)
