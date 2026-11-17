@@ -1,13 +1,13 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { BOARD_SIZES, type AccessoryId, type Board, type Rotation } from '../lib/catalog'
-import { anchorFor, geometry, placementIssue, usedHoles, type PlacementIssue } from '../lib/holes'
+import { BOARD_SIZES, type AccessoryId, type Board, type Item, type Rotation } from '../lib/catalog'
+import { anchorFor, geometry, moveEnd, nearestHole, placementIssue, usedHoles, type Hole, type PlacementIssue } from '../lib/holes'
 import { holeDelta, snapBoard } from '../lib/layout'
 import type { Planner } from './usePlanner'
 import { useLatest } from './useLatest'
 
 export interface DropTarget { board: Board; col: number; row: number; issue: PlacementIssue | null }
 export interface PieceDrag {
-  kind: 'piece'; type: AccessoryId; id: string | null; rotation: Rotation
+  kind: 'piece'; type: AccessoryId; id: string | null; rotation: Rotation; end?: Hole
   /** Piece size in cm and the zoom it was picked up at, for sizing the ghost. */
   w: number; h: number; pxPerCm: number
   clientX: number; clientY: number; target: DropTarget | null
@@ -21,14 +21,16 @@ export interface GroupDrag {
   kind: 'group'; startX: number; startY: number; dx: number; dy: number; dc: number; dr: number; moved: boolean
   boardIds: string[]; itemIds: string[]; origin: { kind: 'board' | 'item'; id: string }
 }
-export type Drag = PieceDrag | BoardDrag | GroupDrag
+/** Dragging one end of a stretchy piece (0 = anchor peg) to another hole on its board. */
+export interface EndDrag { kind: 'end'; id: string; which: 0 | 1; target: ReturnType<typeof moveEnd> | null }
+export type Drag = PieceDrag | BoardDrag | GroupDrag | EndDrag
 
 /** Dragging pieces from the catalog or between holes, and dragging boards by their handle. */
 export function useDrag(planner: Planner, pxPerCm: number) {
   const [drag, setDrag] = useState<Drag | null>(null)
   const latest = useLatest({ drag, planner, pxPerCm })
 
-  function dropTarget(clientX: number, clientY: number, piece: Pick<PieceDrag, 'type' | 'rotation' | 'id' | 'w' | 'h'>): DropTarget | null {
+  function dropTarget(clientX: number, clientY: number, piece: Pick<PieceDrag, 'type' | 'rotation' | 'id' | 'w' | 'h' | 'end'>): DropTarget | null {
     const { layout } = latest.current.planner
     let best: { target: DropTarget; inside: boolean } | null = null
     for (const board of layout.boards) {
@@ -40,10 +42,27 @@ export function useDrag(planner: Planner, pxPerCm: number) {
       const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
       if (best && (best.inside || !inside)) continue
       const x = (clientX - rect.left) / rect.width * bw - piece.w / 2, y = (clientY - rect.top) / rect.height * bh - piece.h / 2
-      const [col, row] = anchorFor(board.size, piece.type, piece.rotation, x, y)
-      best = { inside, target: { board, col, row, issue: placementIssue(board, piece.type, piece.rotation, col, row, usedHoles(layout.items, board, piece.id)) } }
+      const [col, row] = anchorFor(board.size, piece.type, piece.rotation, x, y, piece.end)
+      best = { inside, target: { board, col, row, issue: placementIssue(board, piece.type, piece.rotation, col, row, usedHoles(layout.items, board, piece.id), piece.end) } }
     }
     return best?.target ?? null
+  }
+
+  function endTarget(drag: EndDrag, clientX: number, clientY: number) {
+    const { layout } = latest.current.planner, item = layout.items.find(entry => entry.id === drag.id)
+    const board = item && layout.boards.find(entry => entry.id === item.boardId)
+    const rect = board && document.querySelector(`[data-board-id="${board.id}"] .board-items`)?.getBoundingClientRect()
+    if (!item || !board || !rect) return null
+    const [bw, bh] = BOARD_SIZES[board.size]
+    const hole = nearestHole(board.size, (clientX - rect.left) / rect.width * bw, (clientY - rect.top) / rect.height * bh)
+    return moveEnd(board, layout.items, item, drag.which, hole)
+  }
+
+  function startEndDrag(event: ReactPointerEvent, item: Item, which: 0 | 1) {
+    if (event.button !== 0) return
+    event.preventDefault(); event.stopPropagation()
+    planner.selectItem(item.id)
+    setDrag({ kind: 'end', id: item.id, which, target: null })
   }
 
   function startGroupDrag(event: ReactPointerEvent, origin: GroupDrag['origin']) {
@@ -56,9 +75,9 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     if (event.button !== 0 || (event.target as Element).closest('button')) return
     if (id && planner.groupSelection?.itemIds.includes(id)) { startGroupDrag(event, { kind: 'item', id }); return }
     event.preventDefault()
-    const item = id ? planner.layout.items.find(entry => entry.id === id) : null, rotation = item?.rotation ?? 0
-    const [, , w, h] = geometry(type, rotation).rect
-    const piece = { type, id, rotation, w, h }
+    const item = id ? planner.layout.items.find(entry => entry.id === id) : null, rotation = item?.rotation ?? 0, end = item?.end
+    const [, , w, h] = geometry(type, rotation, end).rect
+    const piece = { type, id, rotation, end, w, h }
     planner.selectItem(id)
     setDrag({ kind: 'piece', ...piece, pxPerCm, clientX: event.clientX, clientY: event.clientY, target: dropTarget(event.clientX, event.clientY, piece) })
   }
@@ -79,6 +98,10 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     const onMove = (event: PointerEvent) => {
       const { drag, planner, pxPerCm } = latest.current
       if (!drag) return
+      if (drag.kind === 'end') {
+        setDrag({ ...drag, target: endTarget(drag, event.clientX, event.clientY) })
+        return
+      }
       if (drag.kind === 'piece') {
         setDrag({ ...drag, clientX: event.clientX, clientY: event.clientY, target: dropTarget(event.clientX, event.clientY, drag) })
         return
@@ -102,6 +125,11 @@ export function useDrag(planner: Planner, pxPerCm: number) {
         if (drag.moved) planner.moveGroup(drag.dx, drag.dy, drag.dc, drag.dr)
         else if (drag.origin.kind === 'item') planner.selectItem(drag.origin.id)
         else planner.selectBoard(drag.origin.id)
+        return
+      }
+      if (drag.kind === 'end') {
+        const target = endTarget(drag, event.clientX, event.clientY)
+        if (target && !target.issue) planner.stretchItem(drag.id, target.col, target.row, target.end)
         return
       }
       if (drag.kind === 'board') {
@@ -128,5 +156,5 @@ export function useDrag(planner: Planner, pxPerCm: number) {
     // dropTarget only reads through `latest`, so the listeners only need to change when a drag starts or ends.
   }, [dragging]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { drag, startPieceDrag, startBoardDrag }
+  return { drag, startPieceDrag, startBoardDrag, startEndDrag }
 }

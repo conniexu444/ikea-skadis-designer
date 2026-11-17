@@ -26,6 +26,13 @@ const DRAW: Record<BuiltinId, (shade: Shade) => string> = {
   button: s => `<circle cx="12" cy="12" r="11" fill="${s.body}" stroke="${s.edge}" stroke-width="1.2"/><circle cx="12" cy="12" r="7.5" fill="${s.face}" stroke="${s.faceEdge}" stroke-width="1"/>`,
 }
 
+/** An elastic cord between two peg points given in cm; drawn on a viewBox in cm. */
+export function cordArt([[x1, y1], [x2, y2]]: [number, number][]) {
+  const line = `M${x1} ${y1}L${x2} ${y2}`
+  return `<path class="cord-hit" d="${line}" stroke="transparent" stroke-width="1.6" stroke-linecap="round"/><path d="${line}" stroke="#3f4447" stroke-width="0.5" stroke-linecap="round"/><path d="${line}" stroke="#7a7f83" stroke-width="0.3" stroke-linecap="round"/>`
+    + [[x1, y1], [x2, y2]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="0.7" fill="#575c60" stroke="#33373a" stroke-width="0.15"/><circle cx="${x}" cy="${y}" r="0.3" fill="#4b5053"/>`).join('')
+}
+
 const escapeXml = (text: string) => text.replace(/[&<>"']/g, char => `&#${char.charCodeAt(0)};`)
 
 /** A custom piece is a rounded block in its color with its name on it, when the name fits. */

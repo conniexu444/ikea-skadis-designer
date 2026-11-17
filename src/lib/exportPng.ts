@@ -1,6 +1,6 @@
 import { BOARD_SIZES, accessory, pieceColor, type Layout } from './catalog'
-import { artSvg } from './art'
-import { allHoles, holePoint, itemPlacement } from './holes'
+import { artSvg, cordArt } from './art'
+import { allHoles, cordPoints, holePoint, itemPlacement } from './holes'
 
 const PALETTE = { white: ['#fafaf8', '#e7e8e4', '#b6c0ba'], black: ['#33383b', '#252d30', '#131b1e'], wood: ['#c9a87f', '#b38c64', '#785c40'] }
 
@@ -26,8 +26,9 @@ export function layoutSvg(layout: Layout, scale = 10, pad = 45) {
     const boardItems = layout.items.filter(item => item.boardId === board.id)
     const holes = allHoles(board.size).map(([col, row]) => slot(board.size, col, row, color[2])).join('')
     const items = boardItems.map(item => {
-      const a = accessory(item.type)!, [rx, ry, rw] = itemPlacement(item, board.size).rect
+      const a = accessory(item.type)!, [rx, ry, rw, rh] = itemPlacement(item, board.size).rect
       const ix = rx * scale, iy = ry * scale, iw = a.w * scale, ih = a.h * scale
+      if (a.stretch) return `<svg x="${ix}" y="${iy}" width="${rw * scale}" height="${rh * scale}" viewBox="0 0 ${rw} ${rh}">${cordArt(cordPoints(item.type, item.end))}</svg>`
       return item.rotation === 90
         ? `<g transform="translate(${ix + rw * scale} ${iy}) rotate(90)">${artSvg(item.type, pieceColor(item.type, item.color), `x="0" y="0" width="${iw}" height="${ih}"`)}</g>`
         : artSvg(item.type, pieceColor(item.type, item.color), `x="${ix}" y="${iy}" width="${iw}" height="${ih}"`)

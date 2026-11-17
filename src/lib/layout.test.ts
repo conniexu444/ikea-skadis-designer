@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Layout } from './catalog'
-import { usedHoles } from './holes'
+import { moveEnd, usedHoles } from './holes'
 import type { Board } from './catalog'
 import { DEFAULT_LAYOUT, areaSelection, boardRectOverlaps, groupPasteOffset, holeDelta, freeBoardSpot, refitItems, sanitizeLayout, separateBoards, snapBoard } from './layout'
 
@@ -43,15 +43,27 @@ describe('sanitizeLayout', () => {
     expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '14,8', '2,6', '2,8'])
   })
 
-  it('stretches an elastic cord between two holes in a row, or a column when rotated', () => {
+  it('stretches an elastic cord between any two holes, and turns an old rotated cord upright', () => {
     const board = DEFAULT_LAYOUT.boards[0]
     const items = [
       { id: 'a', boardId: board.id, type: 'elastic-cord', col: 2, row: 6, rotation: 0, color: 'white' },
       { id: 'b', boardId: board.id, type: 'elastic-cord', col: 20, row: 2, rotation: 90 },
+      { id: 'c', boardId: board.id, type: 'elastic-cord', col: 4, row: 20, rotation: 0, end: [6, -4] },
+      { id: 'd', boardId: board.id, type: 'elastic-cord', col: 4, row: 24, rotation: 0, end: [1, 0] },
     ]
     const layout = sanitizeLayout({ ...DEFAULT_LAYOUT, items })!
-    expect(layout.items.map(item => [item.rotation, item.color])).toEqual([[0, undefined], [90, undefined]])
-    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['14,6', '2,6', '20,14', '20,2'])
+    expect(layout.items.map(item => [item.rotation, item.color, item.end])).toEqual([[0, undefined, undefined], [0, undefined, [0, 12]], [0, undefined, [6, -4]], [0, undefined, undefined]])
+    expect([...usedHoles(layout.items, board).keys()].sort()).toEqual(['10,16', '14,6', '16,24', '2,6', '20,14', '20,2', '4,20', '4,24'])
+  })
+
+  it('moves one end of an elastic cord to a free hole and refuses a taken one', () => {
+    const board = DEFAULT_LAYOUT.boards[0]
+    const cord = { id: 'a', boardId: board.id, type: 'elastic-cord' as const, col: 2, row: 6, rotation: 0 as const }
+    const button = { id: 'b', boardId: board.id, type: 'button' as const, col: 8, row: 10, rotation: 0 as const }
+    expect(moveEnd(board, [cord, button], cord, 1, [6, 14])).toEqual({ col: 2, row: 6, end: [4, 8], issue: null })
+    expect(moveEnd(board, [cord, button], cord, 0, [20, 6])).toEqual({ col: 20, row: 6, end: [-6, 0], issue: null })
+    expect(moveEnd(board, [cord, button], cord, 1, [8, 10]).issue).toBe('taken')
+    expect(moveEnd(board, [cord, button], cord, 0, [14, 6]).issue).toBe('taken')
   })
 
   it('hangs a cup on two neighboring holes in a row and a clip on one', () => {

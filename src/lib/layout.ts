@@ -83,17 +83,23 @@ export function sanitizeLayout(input: any): Layout | null {
     const a = accessory(item?.type)
     if (!a) return
     const rotation = !a.fixed && Number(item.rotation) === 90 ? 90 : 0
+    let end: [number, number] | undefined
+    if (a.stretch) {
+      const [dc, dr] = Array.isArray(item.end) ? [Number(item.end[0]), Number(item.end[1])] : [NaN, NaN]
+      if (Number.isInteger(dc) && Number.isInteger(dr) && (dc + dr) % 2 === 0 && (dc || dr) && Math.abs(dc) <= 40 && Math.abs(dr) <= 40) end = [dc, dr]
+      else if (Number(item.rotation) === 90) end = [0, a.pegs[1][0] / HOLE_PITCH]
+    }
     // oxlint-disable-next-line typescript/no-explicit-any
     const boardIndex = Array.isArray(input.boards) ? input.boards.findIndex((board: any) => board?.id === item.boardId) : 0
     const board = boards[Math.max(0, Math.min(boardIndex, boards.length - 1))]
     let col = Number(item.col), row = Number(item.row)
-    if (!Number.isInteger(col) || !Number.isInteger(row)) [col, row] = anchorFor(board.size, a.id, rotation, Number(item.x) || 0, Number(item.y) || 0)
-    if (placementIssue(board, a.id, rotation, col, row, usedHoles(items, board))) {
-      const spot = findSpot(board, items, a.id, rotation, [col, row])
+    if (!Number.isInteger(col) || !Number.isInteger(row)) [col, row] = anchorFor(board.size, a.id, rotation, Number(item.x) || 0, Number(item.y) || 0, end)
+    if (placementIssue(board, a.id, rotation, col, row, usedHoles(items, board), end)) {
+      const spot = findSpot(board, items, a.id, rotation, [col, row], null, end)
       if (!spot) return
       ;[col, row] = spot
     }
-    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation, ...(a.colors?.includes(item.color) ? { color: item.color as PieceColor } : {}) })
+    items.push({ id: String(item.id || `loaded-${i}`).slice(0, 80), boardId: board.id, type: a.id, col, row, rotation, ...(end ? { end } : {}), ...(a.colors?.includes(item.color) ? { color: item.color as PieceColor } : {}) })
   })
   return { name: String(input.name || 'My perfect setup').slice(0, 60), boards, items, ...(custom.length ? { custom } : {}) }
 }
@@ -164,7 +170,7 @@ export function refitItems(layout: Layout, board: Board, fromSize: BoardSize = b
       const [x, y] = holePoint(fromSize, col, row)
       ;[col, row] = nearestHole(board.size, x > ow / 2 ? x + nw - ow + 0.02 : x - 0.02, y > oh / 2 ? y + nh - oh + 0.01 : y - 0.01)
     }
-    const spot = placementIssue(board, item.type, item.rotation, col, row, usedHoles(kept, board)) ? findSpot(board, kept, item.type, item.rotation, [col, row]) : [col, row]
+    const spot = placementIssue(board, item.type, item.rotation, col, row, usedHoles(kept, board), item.end) ? findSpot(board, kept, item.type, item.rotation, [col, row], null, item.end) : [col, row]
     if (spot) kept.push({ ...item, col: spot[0], row: spot[1] })
     else removed++
   })
